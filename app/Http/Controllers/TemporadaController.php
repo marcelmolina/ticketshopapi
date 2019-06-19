@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Temporada;
 use Illuminate\Http\Request;
 use Validator;
-
+/**
+ * @group Administración de Temporada
+ *
+ * APIs para la gestion de la tabla temporada
+ */
 class TemporadaController extends BaseController
 {
     /**
-     * Display a listing of the resource.
+     * Lista de la tabla temporada.
      *
      * @return \Illuminate\Http\Response
      */
@@ -22,15 +26,58 @@ class TemporadaController extends BaseController
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Listado de las temporadas en venta.
      *
      * @return \Illuminate\Http\Response
      */
- 
+    public function listado_venta_temporadas()
+    {
+        $temporada = Temporada::with('venta_temporadas')
+                    ->paginate(15);
+        $lista_temporada = compact('temporada');
+        return $this->sendResponse($lista_temporada, 'Temporadas devueltas con éxito');
+    }
+
 
     /**
-     * Store a newly created resource in storage.
+     * Buscar Temporada por nombre.
+     *@bodyParam nombre string Nombre de la temporada.
+     *@response{
+     *    "nombre" : "temporada 1",
+     * }
+     * @return \Illuminate\Http\Response
+     */
+    public function buscarTemporada(Request $request)
+    {       
+       $input = $request->all();
+       
+       if(isset($input["nombre"]) && $input["nombre"] != null){
+            
+            $input = $request->all();
+            $temporada = \DB::table('temporada')
+                ->where('temporada.nombre','like', '%'.strtolower($input["nombre"]).'%')
+                ->select('temporada.*')
+                ->get();
+            return $this->sendResponse($temporada->toArray(), 'Todos las Temporadas filtradas');
+       }else{
+            
+            $temporada = Temporada::get();
+            return $this->sendResponse($temporada->toArray(), 'Todos las Temporadas devueltas'); 
+       }
+        
+    }
+
+   
+    /**
+     * Agrega un nuevo elemento a la tabla temporada
      *
+     *@bodyParam nombre string required Nombre de la temporada.
+     *@bodyParam status boolean Status de la temporada. Defaults to 0
+     *
+     * @response {      
+     *  "nombre": "Temporada Gold", 
+     *  "status": 1    
+     * }
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
@@ -47,36 +94,39 @@ class TemporadaController extends BaseController
          return $this->sendResponse($temporada->toArray(), 'Temporada creada con éxito');
     }
 
-    /**
-     * Display the specified resource.
+   
+     /**
+     * Lista una temporada en especifico 
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\Temporada  $temporada
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        //
-          $temporada = Temporada::find($id);
-
+        
+        $temporada = Temporada::find($id);
 
         if (is_null($temporada)) {
             return $this->sendError('Temporada no encontrada');
         }
-
-
         return $this->sendResponse($temporada->toArray(), 'Temporada devuelta con éxito');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Temporada  $temporada
-     * @return \Illuminate\Http\Response
-     */
+    
  
     /**
-     * Update the specified resource in storage.
+     * Actualiza un elemeto de la tabla temporada 
      *
+     *@bodyParam nombre string required Nombre de la temporada.
+     *@bodyParam status boolean Status de la temporada. Defaults to 0
+     *
+     * [Se filtra por el ID]
+     * @response {
+     *  "nombre": "Temporada Gold", 
+     *  "status": 0    
+     * }
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Temporada  $temporada
      * @return \Illuminate\Http\Response
@@ -103,7 +153,9 @@ class TemporadaController extends BaseController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina un elemento de la tabla temporada
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\Temporada  $temporada
      * @return \Illuminate\Http\Response

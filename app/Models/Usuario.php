@@ -1,13 +1,18 @@
 <?php
 
-/**
+/*
  * Created by Reliese Model.
  * Date: Tue, 16 Oct 2018 19:32:04 +0000.
  */
 
 namespace App\Models;
 
-use Reliese\Database\Eloquent\Model as Eloquent;
+use Reliese\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable; 
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Auth\Authenticatable;
+use Laravel\Passport\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Usuario
@@ -32,30 +37,48 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  *
  * @package App\Models
  */
-class Usuario extends Eloquent
+class Usuario extends Model implements AuthenticatableContract
 {
+	use Authenticatable, Notifiable, HasApiTokens, SoftDeletes;
+
 	protected $table = 'usuario';
 	protected $primaryKey = 'email';
 	public $incrementing = false;
 	public $timestamps = false;
 
+	protected $dates = ['deleted_at'];
+
 	protected $casts = [
-		'clave' => 'boolean',
+		//'password' => 'boolean',
 		'tipo_identificacion' => 'bool',
 		'id_rol' => 'int'
 	];
 
 	protected $fillable = [
+		'email',
 		'nombre',
-		'clave',
+		'password',
 		'identificacion',
 		'tipo_identificacion',
 		'direccion',
 		'ciudad',
 		'departamento',
 		'telefono',
-		'id_rol'
+		'id_rol',		
+		'active',
+		'provider',
+		'provider_id', 
+		'activation_token'
 	];
+
+	/**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'password', 'activation_token'
+    ];
 
 	public function rol()
 	{
@@ -86,4 +109,8 @@ class Usuario extends Eloquent
 	{
 		return $this->hasMany(\App\Models\VentaTemporada::class, 'email_usuario');
 	}
+
+
+
+		
 }

@@ -16,7 +16,7 @@ class CreateUsuarioTable extends Migration {
 		{
 			$table->string('email', 200)->primary();
 			$table->string('nombre', 200);
-			$table->binary('clave', 65535);
+			$table->binary('password', 65535);
 			$table->string('identificacion', 200);
 			$table->boolean('tipo_identificacion');
 			$table->string('direccion', 200);
@@ -24,6 +24,11 @@ class CreateUsuarioTable extends Migration {
 			$table->string('departamento', 200);
 			$table->string('telefono', 200);
 			$table->bigInteger('id_rol')->index('usuario_fk0');
+			$table->boolean('active') ->default(false);
+			$table->string('provider')->nullable();
+			$table->string('provider_id')->nullable();			 
+            $table->string('activation_token');
+			$table->softDeletes();
 		});
 	}
 

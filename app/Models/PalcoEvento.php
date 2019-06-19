@@ -19,9 +19,11 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $precio_servicio
  * @property float $impuesto
  * @property int $status
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\Evento $evento
  * @property \App\Models\Palco $palco
+ * @property \App\Models\Moneda $moneda
  * @property \Illuminate\Database\Eloquent\Collection $detalle_descuentos
  * @property \Illuminate\Database\Eloquent\Collection $detalle_vents
  * @property \Illuminate\Database\Eloquent\Collection $detalle_venta_temporadas
@@ -52,12 +54,18 @@ class PalcoEvento extends Eloquent
 		'precio_venta',
 		'precio_servicio',
 		'impuesto',
-		'status'
+		'status',
+		'codigo_moneda'
 	];
 
 	public function evento()
 	{
 		return $this->belongsTo(\App\Models\Evento::class, 'id_evento');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function palco()

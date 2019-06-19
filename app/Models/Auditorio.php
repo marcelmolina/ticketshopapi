@@ -14,15 +14,18 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * 
  * @property int $id
  * @property string $nombre
- * @property string $ciudad
- * @property string $departamento
- * @property string $pais
+ * @property int $id_ciudad
+ * @property int $id_departamento
+ * @property int $id_pais
  * @property string $direccion
  * @property float $latitud
  * @property float $longitud
  * @property int $aforo
  * 
  * @property \Illuminate\Database\Eloquent\Collection $eventos
+ * @property \Illuminate\Database\Eloquent\Collection $ciudad
+ * @property \Illuminate\Database\Eloquent\Collection $departamento
+ * @property \Illuminate\Database\Eloquent\Collection $pais
  * @property \Illuminate\Database\Eloquent\Collection $imagens
  * @property \Illuminate\Database\Eloquent\Collection $tribunas
  *
@@ -41,9 +44,9 @@ class Auditorio extends Eloquent
 
 	protected $fillable = [
 		'nombre',
-		'ciudad',
-		'departamento',
-		'pais',
+		'id_ciudad',
+		'id_departamento',
+		'id_pais',
 		'direccion',
 		'latitud',
 		'longitud',
@@ -53,6 +56,21 @@ class Auditorio extends Eloquent
 	public function eventos()
 	{
 		return $this->hasMany(\App\Models\Evento::class, 'id_auditorio');
+	}
+
+	public function ciudad()
+	{
+		return $this->belongsTo(\App\Models\Ciudad::class, 'id_ciudad');
+	}
+
+	public function departamento()
+	{
+		return $this->belongsTo(\App\Models\Departamento::class, 'id_departamento');
+	}
+
+	public function pais()
+	{
+		return $this->belongsTo(\App\Models\Pais::class, 'id_pais');
 	}
 
 	public function imagens()

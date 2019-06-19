@@ -22,8 +22,10 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property bool $status
  * @property int $id_descuento
  * @property float $monto_domicilio
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\Vent $vent
+ * @property \App\Models\Moneda $moneda
  * @property \App\Models\BoletaEvento $boleta_evento
  * @property \App\Models\PalcoEvento $palco_evento
  * @property \App\Models\DescuentoEvento $descuento_evento
@@ -58,12 +60,18 @@ class DetalleVent extends Eloquent
 		'impuesto',
 		'status',
 		'id_descuento',
-		'monto_domicilio'
+		'monto_domicilio',
+		'codigo_moneda'
 	];
 
 	public function vent()
 	{
 		return $this->belongsTo(\App\Models\Vent::class, 'id_venta');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function boleta_evento()

@@ -33,6 +33,11 @@ class PuntoventaEvento extends Eloquent
 		'id_puntoventa' => 'int'
 	];
 
+	protected $fillable = [
+		'id_evento', 
+		'id_puntoventa'
+	];
+
 	public function evento()
 	{
 		return $this->belongsTo(\App\Models\Evento::class, 'id_evento');

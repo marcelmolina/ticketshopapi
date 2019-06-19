@@ -18,6 +18,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $precio_servicio
  * @property float $impuesto
  * @property int $status
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\BoletaEvento $boleta_evento
  * @property \App\Models\Preventum $preventum
@@ -46,12 +47,18 @@ class BoletasPrevent extends Eloquent
 		'precio_venta',
 		'precio_servicio',
 		'impuesto',
-		'status'
+		'status',
+		'codigo_moneda'
 	];
 
 	public function boleta_evento()
 	{
 		return $this->belongsTo(\App\Models\BoletaEvento::class, 'id_boleta');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function preventum()

@@ -21,9 +21,11 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $porcentaje
  * @property float $monto
  * @property float $status
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\DescuentoEvento $descuento_evento
  * @property \App\Models\Tribuna $tribuna
+ * @property \App\Models\Moneda $moneda
  * @property \App\Models\Localidad $localidad
  * @property \App\Models\BoletaEvento $boleta_evento
  * @property \App\Models\PalcoEvento $palco_evento
@@ -54,7 +56,8 @@ class DetalleDescuento extends Eloquent
 		'id_palco_evento',
 		'porcentaje',
 		'monto',
-		'status'
+		'status',
+		'codigo_moneda'
 	];
 
 	public function descuento_evento()
@@ -65,6 +68,11 @@ class DetalleDescuento extends Eloquent
 	public function tribuna()
 	{
 		return $this->belongsTo(\App\Models\Tribuna::class, 'id_tribuna');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function localidad()

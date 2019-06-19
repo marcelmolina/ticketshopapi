@@ -31,6 +31,11 @@ class ImagenArtist extends Eloquent
 		'id_imagen' => 'int'
 	];
 
+	protected $fillable = [
+		'id_artista',
+		'id_imagen'
+	];
+
 	public function artist()
 	{
 		return $this->belongsTo(\App\Models\Artist::class, 'id_artista');

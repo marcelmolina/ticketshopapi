@@ -27,6 +27,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property int $id_temporada
  * @property int $status
  * @property \Carbon\Carbon $fecha_inicio_venta
+ * @property double $monto_minimo
  * 
  * @property \App\Models\Auditorio $auditorio
  * @property \App\Models\Cliente $cliente
@@ -49,21 +50,25 @@ class Evento extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'tipo_evento' => 'bool',
+		'id_tipo_evento' => 'int',
 		'domicilios' => 'int',
 		'venta_linea' => 'int',
 		'id_auditorio' => 'int',
 		'id_cliente' => 'int',
 		'id_temporada' => 'int',
-		'status' => 'int'
+		'status' => 'int',
+		'monto_minimo' => 'double'
 	];
 
 	protected $dates = [
-		'fecha_evento',
+		'fecha_evento',		
+		'fecha_inicio_venta_internet'
+	];
+
+	protected $times = [		
 		'hora_inicio',
 		'hora_apertura',
-		'hora_finalizacion',
-		'fecha_inicio_venta'
+		'hora_finalizacion'		
 	];
 
 	protected $fillable = [
@@ -73,19 +78,26 @@ class Evento extends Eloquent
 		'hora_apertura',
 		'hora_finalizacion',
 		'codigo_pulep',
-		'tipo_evento',
+		'id_tipo_evento',
 		'domicilios',
 		'venta_linea',
 		'id_auditorio',
 		'id_cliente',
 		'id_temporada',
 		'status',
-		'fecha_inicio_venta'
+		'fecha_inicio_venta_internet',
+		'fecha_inicio_venta_puntos',
+		'monto_minimo'
 	];
 
 	public function auditorio()
 	{
 		return $this->belongsTo(\App\Models\Auditorio::class, 'id_auditorio');
+	}
+
+	public function tipoevento()
+	{
+		return $this->belongsTo(\App\Models\TipoEvento::class, 'id_tipo_evento');
 	}
 
 	public function cliente()

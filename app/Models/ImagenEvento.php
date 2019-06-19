@@ -31,6 +31,11 @@ class ImagenEvento extends Eloquent
 		'id_evento' => 'int'
 	];
 
+	protected $fillable = [
+		'id_imagen',
+		'id_evento'
+	];
+
 	public function imagen()
 	{
 		return $this->belongsTo(\App\Models\Imagen::class, 'id_imagen');

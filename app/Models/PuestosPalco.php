@@ -32,6 +32,11 @@ class PuestosPalco extends Eloquent
 		'id_puesto' => 'int'
 	];
 
+	protected $fillable = [
+		'id_palco',
+		'id_puesto'
+	];
+
 	public function palco()
 	{
 		return $this->belongsTo(\App\Models\Palco::class, 'id_palco');

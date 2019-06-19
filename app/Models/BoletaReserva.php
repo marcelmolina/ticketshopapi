@@ -27,9 +27,11 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property string $direccion
  * @property string $email
  * @property string $email_referido
+ * @property string $moneda
  * 
  * @property \App\Models\BoletaEvento $boleta_evento
  * @property \App\Models\Preventum $preventum
+ * @property \App\Models\Preventum $moneda
  * @property \App\Models\Usuario $usuario
  * @property \App\Models\PuntoVentum $punto_ventum
  * @property \Illuminate\Database\Eloquent\Collection $abono_reservas
@@ -68,7 +70,8 @@ class BoletaReserva extends Eloquent
 		'telefono',
 		'direccion',
 		'email',
-		'email_referido'
+		'email_referido',
+		'codigo_moneda'
 	];
 
 	public function boleta_evento()
@@ -79,6 +82,11 @@ class BoletaReserva extends Eloquent
 	public function preventum()
 	{
 		return $this->belongsTo(\App\Models\Preventum::class, 'id_preventa');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function usuario()

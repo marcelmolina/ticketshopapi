@@ -21,6 +21,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property int $id_cuponera
  * @property int $cantidad_compra
  * @property int $cantidad_paga
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\TipoCupon $tipo_cupon
  * @property \App\Models\Cuponera $cuponera
@@ -50,7 +51,8 @@ class Cupon extends Eloquent
 		'id_tipo_cupon',
 		'id_cuponera',
 		'cantidad_compra',
-		'cantidad_paga'
+		'cantidad_paga',
+		'codigo_moneda'
 	];
 
 	public function tipo_cupon()
@@ -61,5 +63,10 @@ class Cupon extends Eloquent
 	public function cuponera()
 	{
 		return $this->belongsTo(\App\Models\Cuponera::class, 'id_cuponera');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 }

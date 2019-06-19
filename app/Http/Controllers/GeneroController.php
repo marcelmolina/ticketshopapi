@@ -5,38 +5,73 @@ namespace App\Http\Controllers;
 use App\Models\Genero;
 use Illuminate\Http\Request;
 use Validator;
-
+/**
+ * @group Administración de Genero 
+ *
+ * APIs para la gestion de genero
+ */
 class GeneroController extends BaseController
 {
     /**
-     * Display a listing of the resource.
+     * Lista de la tabla genero.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        //
+        
         $genero = Genero::paginate(15);
 
         return $this->sendResponse($genero->toArray(), 'Géneros devueltos con éxito');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
- 
 
     /**
-     * Store a newly created resource in storage.
-     *
+     * Buscar Generos por descripción.
+     *@bodyParam nombre string Nombre del genero.
+     *@response{
+     *    "nombre" : "Rock",
+     * }
+     * @return \Illuminate\Http\Response
+     */
+    public function buscarGenero(Request $request)
+    {
+       
+       $input = $request->all();
+       
+       if(isset($input["nombre"]) && $input["nombre"] != null){
+            
+            $input = $request->all();
+            $generos = \DB::table('genero')
+                ->where('genero.nombre','like', '%'.strtolower($input["nombre"]).'%')
+                ->select('genero.id','genero.nombre')
+                ->get();
+            return $this->sendResponse($generos->toArray(), 'Todos los Géneros filtrados');
+       }else{
+            
+            $generos = \DB::table('genero')                
+                ->select('genero.id','genero.nombre')
+                ->get();
+            return $this->sendResponse($generos->toArray(), 'Todos los géneros devueltos'); 
+       }
+
+        
+    }
+
+   
+
+    /**
+     * Agrega un nuevo elemento a la tabla genero
+     *@bodyParam nombre string required Nombre del genero.
+     *@response{
+     *    "nombre" : "Electronica",
+     * }
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        //
+       
        $validator = Validator::make($request->all(), [
             'nombre' => 'required'            
         ]);
@@ -48,7 +83,9 @@ class GeneroController extends BaseController
     }
 
     /**
-     * Display the specified resource.
+     * Lista un genero en especifico 
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\Genero  $genero
      * @return \Illuminate\Http\Response
@@ -67,22 +104,21 @@ class GeneroController extends BaseController
         return $this->sendResponse($genero->toArray(), 'Género devuelto con éxito');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Genero  $genero
-     * @return \Illuminate\Http\Response
-     */
-   
+    
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza un elemeto de la tabla Genero 
      *
+     * [Se filtra por el ID]
+     *@bodyParam nombre string required Nombre del genero.
+     *@response{
+     *    "nombre" : "Electronica Sound",
+     * }
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Genero  $genero
+     * @param  \App\Models\Genero  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Genero $genero)
+    public function update(Request $request, $id)
     {
         //
         $input = $request->all();
@@ -97,6 +133,10 @@ class GeneroController extends BaseController
             return $this->sendError('Error de validación', $validator->errors());       
         }
 
+        $genero = Genero::find($id);        
+        if (is_null($genero)) {
+            return $this->sendError('Genero no encontrada');
+        }
 
         $genero->nombre = $input['nombre'];
          $genero->save();
@@ -105,21 +145,27 @@ class GeneroController extends BaseController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina un elemento de la tabla Genero
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\Genero  $genero
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
-        $genero = Genero::find($id);
-        if (is_null($genero)) {
-            return $this->sendError('Género no encontrado');
+        
+        try {
+            $genero = Genero::find($id);
+            if (is_null($genero)) {
+                return $this->sendError('Género no encontrado');
+            }
+            $genero->delete();
+
+            return $this->sendResponse($genero->toArray(), 'Genero eliminado con éxito');
+
+        }catch (\Illuminate\Database\QueryException $e){
+            return response()->json(['error' => 'El genero no se puedo eliminar, es usado en otra tabla', 'exception' => $e->errorInfo], 400);
         }
-        $genero->delete();
-
-
-        return $this->sendResponse($genero->toArray(), 'Genero eliminado con éxito');
     }
 }

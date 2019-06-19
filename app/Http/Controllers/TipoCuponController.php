@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\TipoCupon;
 use Illuminate\Http\Request;
 use Validator;
-
+/**
+ * @group Administración de Tipo de Cupon
+ *
+ * APIs para la gestion de la tabla tipo_cupon
+ */
 class TipoCuponController extends BaseController
 {
     /**
-     * Display a listing of the resource.
+     * Lista de la tabla tipo_cupon.
      *
      * @return \Illuminate\Http\Response
      */
@@ -20,16 +24,45 @@ class TipoCuponController extends BaseController
         return $this->sendResponse($tipoCupon->toArray(), 'Tipos de cupones devueltos con éxito');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-   
 
     /**
-     * Store a newly created resource in storage.
-     *
+     * Buscar Tipo de cupon por descripción.
+     *@bodyParam nombre string Nombre del Tipo de descuento.
+     *@response{
+     *    "nombre" : "Tipo cupon 1",
+     * }
+     * @return \Illuminate\Http\Response
+     */
+    public function buscarTipoCupon(Request $request)
+    {
+       
+       $input = $request->all();
+       
+       if(isset($input["nombre"]) && $input["nombre"] != null){
+            
+            $input = $request->all();
+            $tipoCupon = \DB::table('tipo_cupon')
+                ->where('tipo_cupon.nombre','like', '%'.strtolower($input["nombre"]).'%')
+                ->select('tipo_cupon.id','tipo_cupon.nombre')
+                ->get();
+            return $this->sendResponse($tipoCupon->toArray(), 'Todos los tipos de cupon filtrados');
+       }else{
+            
+            $tipoCupon = \DB::table('tipo_cupon')                
+                ->select('tipo_cupon.id','tipo_cupon.nombre')
+                ->get();
+            return $this->sendResponse($tipoCupon->toArray(), 'Todos los tipos de cupon devueltos'); 
+       }
+        
+    }
+
+   
+    /**
+     * Agrega un nuevo elemento a la tabla tipo_cupon
+     *@bodyParam nombre string required Nombre del tipo de cupón.
+     * @response {      
+     *  "nombre": "Tipo 1"            
+     * }
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
@@ -45,8 +78,10 @@ class TipoCuponController extends BaseController
          return $this->sendResponse($tipoCupon->toArray(), 'Tipo de Cupón  creado con éxito');
     }
 
-    /**
-     * Display the specified resource.
+     /**
+     * Lista de un tipo de cupon en especifico 
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\TipoCupon  $tipoCupon
      * @return \Illuminate\Http\Response
@@ -64,21 +99,20 @@ class TipoCuponController extends BaseController
         return $this->sendResponse($tipoCupon->toArray(), 'Tipo de Cupón  devuelto con éxito');
     }
 
+    
     /**
-     * Show the form for editing the specified resource.
+     * Actualiza un elemeto de la tabla tipo_cupon 
      *
-     * @param  \App\Models\TipoCupon  $tipoCupon
-     * @return \Illuminate\Http\Response
-     */
-   
-    /**
-     * Update the specified resource in storage.
-     *
+     * [Se filtra por el ID]
+     *@bodyParam nombre string required Nombre del tipo de cupón.
+     * @response {
+     *  "nombre": "Tipo Cupon 1"
+     * }
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\TipoCupon  $tipoCupon
+     * @param  \App\Models\TipoCupon  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($id,Request $request, TipoCupon $tipoCupon)
+    public function update($id, Request $request)
     {
         $input = $request->all();
 
@@ -94,7 +128,7 @@ class TipoCuponController extends BaseController
 
      $tipoCupon = TipoCupon::find($id);
 
- if (is_null($tipoCupon)) {
+    if (is_null($tipoCupon)) {
             return $this->sendError('Tipo de descuento no encontrado');
         }
 
@@ -106,20 +140,27 @@ class TipoCuponController extends BaseController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina un elemento de la tabla tipo_cupon
+     *
+     * [Se filtra por el ID]
      *
      * @param  \App\Models\TipoCupon  $tipoCupon
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-      $tipoCupon = TipoCupon::find($id);
-        if (is_null($tipoCupon)) {
-            return $this->sendError('Tipo de cupón no encontrado');
+      
+        try { 
+
+            $tipoCupon = TipoCupon::find($id);
+            if (is_null($tipoCupon)) {
+                return $this->sendError('Tipo de cupón no encontrado');
+            }
+            $tipoCupon->delete();
+            return $this->sendResponse($tipoCupon->toArray(), 'Tipo de Cupón eliminado con éxito');
+
+        }catch (\Illuminate\Database\QueryException $e){
+            return response()->json(['error' => 'Tipo de Cupón  no se puedo eliminar, es usado en otra tabla', 'exception' => $e->errorInfo], 400);
         }
-        $tipoCupon->delete();
-
-
-        return $this->sendResponse($tipoCupon->toArray(), 'Tipo de Cupón eliminado con éxito');
     }
 }

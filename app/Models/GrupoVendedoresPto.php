@@ -30,6 +30,11 @@ class GrupoVendedoresPto extends Eloquent
 		'id_punto_venta' => 'int'
 	];
 
+	protected $fillable = [
+		'id_grupo_vendedores', 
+		'id_punto_venta'
+	];
+
 	public function grups_vendedore()
 	{
 		return $this->belongsTo(\App\Models\GrupsVendedore::class, 'id_grupo_vendedores');

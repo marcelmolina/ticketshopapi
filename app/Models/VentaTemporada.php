@@ -25,8 +25,10 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property bool $tipo_identidicacion
  * @property float $precio_venta
  * @property float $impuesto
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\Usuario $usuario
+ * @property \App\Models\Moneda $moneda
  * @property \App\Models\Temporada $temporada
  * @property \Illuminate\Database\Eloquent\Collection $detalle_venta_temporadas
  *
@@ -60,12 +62,18 @@ class VentaTemporada extends Eloquent
 		'email',
 		'tipo_identidicacion',
 		'precio_venta',
-		'impuesto'
+		'impuesto',
+		'codigo_moneda'
 	];
 
 	public function usuario()
 	{
 		return $this->belongsTo(\App\Models\Usuario::class, 'email_usuario');
+	}
+
+	public function moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function temporada()

@@ -19,7 +19,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $precio_servicio
  * @property float $impuesto
  * @property int $status
- * @property string $codigo
+ * @property string $codigo_moneda
  * 
  * @property \App\Models\Evento $evento
  * @property \App\Models\Puesto $puesto
@@ -53,7 +53,7 @@ class BoletaEvento extends Eloquent
 		'precio_servicio',
 		'impuesto',
 		'status',
-		'codigo'
+		'codigo_moneda'
 	];
 
 	public function evento()
@@ -64,6 +64,11 @@ class BoletaEvento extends Eloquent
 	public function puesto()
 	{
 		return $this->belongsTo(\App\Models\Puesto::class, 'id_puesto');
+	}
+
+	public function codigo_moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function boleta_reserva()

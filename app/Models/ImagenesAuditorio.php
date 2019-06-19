@@ -31,6 +31,11 @@ class ImagenesAuditorio extends Eloquent
 		'id_auditorio' => 'int'
 	];
 
+	protected $fillable = [
+		'id_imagen',
+		'id_auditorio'
+	];
+
 	public function imagen()
 	{
 		return $this->belongsTo(\App\Models\Imagen::class, 'id_imagen');

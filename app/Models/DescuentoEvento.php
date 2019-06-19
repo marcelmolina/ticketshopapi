@@ -60,7 +60,8 @@ class DescuentoEvento extends Eloquent
 		'porcentaje',
 		'monto',
 		'cantidad_compra',
-		'cantidad_paga'
+		'cantidad_paga',
+		'codigo_moneda'
 	];
 
 	public function evento()
@@ -71,6 +72,11 @@ class DescuentoEvento extends Eloquent
 	public function tipo_descuento()
 	{
 		return $this->belongsTo(\App\Models\TipoDescuento::class, 'tipo_descuento');
+	}
+
+	public function codigo_moneda()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
 	}
 
 	public function detalle_descuentos()

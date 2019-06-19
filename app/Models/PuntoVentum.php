@@ -18,6 +18,10 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property string $direccion
  * @property string $telefono
  * @property bool $tipo_identificacion
+ * @property string $responsable
+ * @property string $email
+ * @property string $zona
+ * @property int $id_ciudad
  * 
  * @property \Illuminate\Database\Eloquent\Collection $boleta_reservas
  * @property \Illuminate\Database\Eloquent\Collection $devolucions
@@ -41,8 +45,17 @@ class PuntoVentum extends Eloquent
 		'identificacion',
 		'direccion',
 		'telefono',
-		'tipo_identificacion'
+		'tipo_identificacion',
+		'responsable',
+		'email',
+		'zona',
+		'id_ciudad'
 	];
+
+	public function ciudades()
+	{
+		return $this->belongsTo(\App\Models\Ciudad::class, 'id_ciudad');
+	}
 
 	public function boleta_reservas()
 	{
