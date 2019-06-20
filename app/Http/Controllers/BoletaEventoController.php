@@ -33,7 +33,6 @@ class BoletaEventoController extends BaseController
         return $this->sendResponse($boleta_evento->toArray(), 'Boletas de los eventos devueltos con éxito');
     }
 
-  
     /**
      * Agrega un nuevo elemento a la tabla boleta_evento
      *

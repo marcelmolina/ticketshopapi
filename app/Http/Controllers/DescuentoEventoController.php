@@ -31,6 +31,36 @@ class DescuentoEventoController extends BaseController
         return $this->sendResponse($evento_descuento->toArray(), 'Descuentos por evento devueltos con éxito');
     }
 
+
+
+    /**
+     * Buscar descuento evento por nombre.
+     *@bodyParam nombre string Nombre del descuento evento.
+     *@response{
+     *    "nombre" : "Descuento 1",
+     * }
+     * @return \Illuminate\Http\Response
+     */
+    public function buscarDescuentoEvento(Request $request)
+    {
+       
+       $input = $request->all();
+       
+       if(isset($input["nombre"]) && $input["nombre"] != null){
+            
+            $input = $request->all();
+            $boleta_evento = DescuentoEvento::with('evento')->with('tipo_descuento')->with('codigo_moneda')
+                ->where('descuento_evento.nombre','like', '%'.strtolower($input["nombre"]).'%')
+                ->get();
+            return $this->sendResponse($boleta_evento->toArray(), 'Todas las boletas filtradas');
+       }else{
+            
+            $boleta_evento = DescuentoEvento::with('evento')->with('tipo_descuento')->with('codigo_moneda')->get();
+            return $this->sendResponse($boleta_evento->toArray(), 'Todas las boletas devueltas'); 
+       }
+        
+    }
+
   
     /**
      * Agrega un nuevo elemento a la tabla evento_cuponera
