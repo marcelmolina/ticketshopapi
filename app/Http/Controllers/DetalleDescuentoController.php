@@ -267,13 +267,13 @@ class DetalleDescuentoController extends BaseController
         }
 
 
-        if($input['id_tribuna'] != null){
+        if(isset($input['id_tribuna']) && $input['id_tribuna'] != null){
 
             $tribuna = Tribuna::find($input['id_tribuna']);
             if (is_null($tribuna)) {
                 return $this->sendError('La tribuna indicada no existe');
             }
-            if($input['id_localidad'] != null){
+            if(isset($input['id_localidad']) && $input['id_localidad'] != null){
 
                 $localidad = Localidad::find($input['id_localidad']);
                 if (is_null($localidad)) {
@@ -289,7 +289,7 @@ class DetalleDescuentoController extends BaseController
 
         }
 
-        if($input['id_boleta_evento'] != null){
+        if(isset($input['id_boleta_evento']) && $input['id_boleta_evento'] != null){
 
             $boleta_evento = BoletaEvento::find($input['id_boleta_evento']);
             
@@ -303,7 +303,7 @@ class DetalleDescuentoController extends BaseController
             $detalle_descuento_search->id_boleta_evento = $input['id_boleta_evento'];
         }
 
-        if($input['id_palco_evento'] != null){
+        if(isset($input['id_palco_evento']) && $input['id_palco_evento'] != null){
 
             $palco_evento = PalcoEvento::find($input['id_palco_evento']);
                                 

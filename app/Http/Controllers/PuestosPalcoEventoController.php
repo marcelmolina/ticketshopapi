@@ -34,11 +34,13 @@ class PuestosPalcoEventoController extends BaseController
     /**
      * Agrega un nuevo elemento a la tabla puestos_palco_evento
      * Se valida que el puesto no esté asignado a otro boleto para ese evento
-     *@bodyParam id_palco_evento int required Id del palco_evento.
+     *@bodyParam id_evento_e int required Id del evento presente en la tabla PalcoEvento.
+     *@bodyParam id_palco_e int required Id del palco presente en la tabla PalcoEvento.
      *@bodyParam id_palco int required Id del palco.
      *@bodyParam id_puesto int required Id del puesto.
      * @response {
-     *  "id_palco_evento": 1,
+     *  "id_evento_e": 1,
+     *  "id_palco_e": 1,
      *  "id_palco": 1, 
      *  "id_puesto": 1,     
      * }
@@ -48,7 +50,8 @@ class PuestosPalcoEventoController extends BaseController
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_palco_evento' => 'required|integer',
+            'id_evento_e' => 'required|integer',
+            'id_palco_e' => 'required|integer',
             'id_palco' => 'required|integer',
             'id_puesto' => 'required|integer',            
         ]);
@@ -56,10 +59,15 @@ class PuestosPalcoEventoController extends BaseController
             return $this->sendError('Error de validación.', $validator->errors());       
         }
 
-        $palcoevento = PalcoEvento::find($request->input('id_palco_evento'));
-        if (is_null($palcoevento)) {
+        $palcoevento = PalcoEvento::where('id_evento',$request->input('id_evento_e'))
+                            ->where('id_palco',$request->input('id_palco_e'))
+                            ->first();
+        if (!$palcoevento) {
             return $this->sendError('El palco_evento indicado no existe');
         }
+        
+        $id_palco_evento = $palcoevento->id;
+
 
         $palco = Palco::find($request->input('id_palco'));
         if (is_null($palco)) {
@@ -71,14 +79,21 @@ class PuestosPalcoEventoController extends BaseController
             return $this->sendError('El puesto indicado no existe');
         }
 
-        $puesto_palco__evento_search = $this->validate_palco_puesto($request->input('id_palco_evento'),$request->input('id_palco'), $request->input('id_puesto'));
+        
+
+        $puesto_palco__evento_search = $this->validate_palco_puesto($id_palco_evento, $request->input('id_palco'), $request->input('id_puesto'));
 
 
         if(!$puesto_palco__evento_search){           
            return $this->sendError('No se puede agregar el registro. El puesto ya se encuentra asignado a otro boleto para ese evento');         
         }else{   
 
-            $puesto_palco_evento = PuestosPalcoEvento::create($request->all());        
+            $puesto_palco_evento = new PuestosPalcoEvento();
+            $puesto_palco_evento->id_palco_evento = $id_palco_evento;
+            $puesto_palco_evento->id_palco = $request->input('id_palco');
+            $puesto_palco_evento->id_puesto = $request->input('id_puesto');
+            $puesto_palco_evento->save();
+
             return $this->sendResponse($puesto_palco_evento->toArray(), 'El puesto palco por evento creado con éxito');
         }
 
@@ -190,42 +205,26 @@ class PuestosPalcoEventoController extends BaseController
     /**
      * Elimina un elemento de la tabla puestos_palco_evento
      *
-     * [Se filtra por el ID del palco_evento]
-     * Registros que se quieren eliminar.
-     *@bodyParam id_palco int required Id del palco.
-     *@bodyParam id_puesto int required Id del puesto.
-     * @response {
-     *  "id_palco": 1, 
-     *  "id_puesto": 1,     
-     * }
+     * [Se filtra por el ID del palco_evento. Se eliminarán todos los registros que estén asignados a éste ID]
+	 * 
      * @param  \App\Models\PuestosPalcoEvento  $puestosPalcoEvento
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-
-        $validator = Validator::make($request->all(), [            
-            'id_palco' => 'required|integer',
-            'id_puesto' => 'required|integer',            
-        ]);
-        if($validator->fails()){
-            return $this->sendError('Error de validación.', $validator->errors());       
-        }
-
+        
         try { 
             
             $puesto_palco_evento_con = PuestosPalcoEvento::where('id_palco_evento', $id)
-                            ->where('id_palco', $request->input('id_palco'))
-                            ->where('id_puesto', $request->input('id_puesto'))
-                            ->first();
-            
-            if (!$puesto_palco_evento_con) {
+                            			->get();  
+
+                      
+            if (!isset($puesto_palco_evento_con) || is_null($puesto_palco_evento_con) || sizeof($puesto_palco_evento_con)<1) {
                 return $this->sendError('Puestos palcos por evento no encontrados');
             }
+            
             $puesto_palco_evento = \DB::table('puestos_palco_evento')
-                            ->where('id_palco_evento', $id)
-                            ->where('id_palco', $request->input('id_palco'))
-                            ->where('id_puesto', $request->input('id_puesto'))
+                            ->where('id_palco_evento', $id)                            
                             ->delete();
             if($puesto_palco_evento){
                 return $this->sendResponse($puesto_palco_evento_con->toArray(), 'Puestos palcos por evento eliminados con éxito');
