@@ -16,7 +16,7 @@ use Carbon\Carbon;
 class TasaController extends BaseController
 {
     /**
-     * Lista de la tabla tasa.
+     * Lista de la tabla tasa paginada.
      *
      * @return \Illuminate\Http\Response
      */
@@ -24,6 +24,19 @@ class TasaController extends BaseController
     {
         
         $tasa = Tasa::with('moneda_alta')->with('moneda_baja')->paginate(15);
+        return $this->sendResponse($tasa->toArray(), 'Tasas devueltas con éxito');
+    }
+
+
+    /**
+     * Lista de las tasas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tasa_all()
+    {
+        
+        $tasa = Tasa::with('moneda_alta')->with('moneda_baja')->get();
         return $this->sendResponse($tasa->toArray(), 'Tasas devueltas con éxito');
     }
 

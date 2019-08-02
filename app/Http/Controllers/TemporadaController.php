@@ -13,7 +13,7 @@ use Validator;
 class TemporadaController extends BaseController
 {
     /**
-     * Lista de la tabla temporada.
+     * Lista de la tabla temporada paginada.
      *
      * @return \Illuminate\Http\Response
      */
@@ -21,7 +21,19 @@ class TemporadaController extends BaseController
     {
         //
          $temporada = Temporada::paginate(15);
+        return $this->sendResponse($temporada->toArray(), 'Temporadas devueltas con éxito');
+    }
 
+
+    /**
+     * Lista de las temporadas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function temporada_all()
+    {
+        //
+         $temporada = Temporada::get();
         return $this->sendResponse($temporada->toArray(), 'Temporadas devueltas con éxito');
     }
 

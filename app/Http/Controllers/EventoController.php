@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Input;
 class EventoController extends BaseController
 {
     /**
-     * Lista de la tabla evento.
+     * Lista de la tabla evento paginados.
      *
      * @return \Illuminate\Http\Response
      */
@@ -29,6 +29,22 @@ class EventoController extends BaseController
                     ->with('cliente')
                     ->with('temporada')                    
                     ->paginate(15);
+        return $this->sendResponse($evento->toArray(), 'Eventos devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de todos los evento.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function evento_all()
+    {
+        $evento = Evento::with('auditorio')
+                    ->with('tipoevento')
+                    ->with('cliente')
+                    ->with('temporada')                    
+                    ->get();
         return $this->sendResponse($evento->toArray(), 'Eventos devueltos con éxito');
     }
 
@@ -135,7 +151,7 @@ class EventoController extends BaseController
 
         if(!is_null($request->input('hora_inicio'))){
             $validator = Validator::make($request->all(), [
-                'hora_inicio' => 'timezone',      
+                'hora_inicio' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -144,7 +160,7 @@ class EventoController extends BaseController
 
         if(!is_null($request->input('hora_apertura'))){
             $validator = Validator::make($request->all(), [
-                'hora_apertura' => 'timezone',      
+                'hora_apertura' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -153,7 +169,7 @@ class EventoController extends BaseController
 
         if(!is_null($request->input('hora_finalizacion'))){
             $validator = Validator::make($request->all(), [
-                'hora_finalizacion' => 'timezone',      
+                'hora_finalizacion' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -162,7 +178,7 @@ class EventoController extends BaseController
 
         if(!is_null($request->input('fecha_inicio_venta_internet'))){
             $validator = Validator::make($request->all(), [
-                'fecha_inicio_venta_internet' => 'date',      
+                'fecha_inicio_venta_internet' => 'date|date_format:Y-m-d',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -213,7 +229,7 @@ class EventoController extends BaseController
      */
     public function show($id)
     {
-        $evento = Evento::find($id);
+        $evento = Evento::with("auditorio")->with("tipoevento")->with("cliente")->with("temporada")->find($id);
         if (is_null($evento)) {
             return $this->sendError('Evento no encontrado');
         }
@@ -294,7 +310,7 @@ class EventoController extends BaseController
 
         if(!is_null($input['hora_inicio'])){
             $validator = Validator::make($input, [
-                'hora_inicio' => 'timezone',      
+                'hora_inicio' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -303,7 +319,7 @@ class EventoController extends BaseController
         }
         if(!is_null($input['hora_apertura'])){
             $validator = Validator::make($input, [
-                'hora_apertura' => 'timezone',      
+                'hora_apertura' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -313,7 +329,7 @@ class EventoController extends BaseController
 
         if(!is_null($input['hora_finalizacion'])){
             $validator = Validator::make($input, [
-                'hora_finalizacion' => 'timezone',      
+                'hora_finalizacion' => 'date_format:H:i',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -323,7 +339,7 @@ class EventoController extends BaseController
 
         if(!is_null($input['fecha_inicio_venta_internet'])){
             $validator = Validator::make($input, [
-                'fecha_inicio_venta_internet' => 'date',      
+                'fecha_inicio_venta_internet' => 'date|date_format:Y-m-d',      
             ]);
             if($validator->fails()){
                 return $this->sendError('Error de validación.', $validator->errors());       
@@ -469,88 +485,95 @@ class EventoController extends BaseController
 
         $input = $request->all();
         if(count($input) > 0){
-            $eventos = Evento::with('artists')
-                        ->with('tipoevento')                        
-                        ->with('imagens')
-                        ->with('palcos')
-                        ->where('status', 1)
-                        ->paginate(15);
+
+            $eventos = Evento::with('imagens');
+                       
 
             if(!is_null($input['precio_inicio'])){
                 
                 $validator = Validator::make($input, [
-                    'precio_inicio' => 'integer',                  
+                        'precio_inicio' => 'nullable|integer',                  
                 ]);
+                if($validator->fails()){
+                    return $this->sendError('Error de validación.', $validator->errors());       
+                }
                 $variable = $input['precio_inicio'];
-                $eventos = Evento::with(array('palcos' => function($query) use ($variable)
-                        {  
-                            $query->where('precio_venta','>=', $variable);
-                        }))
-                        ->with('artists')
-                        ->with('tipoevento')                        
-                        ->with('imagens')
-                        ->where('status', 1)
-                        ->get();
 
                 if(!is_null($input['precio_fin'])){
                     $validator = Validator::make($input, [
-                        'precio_fin' => 'integer',                  
+                        'precio_fin' => 'nullable|integer',                  
                     ]);
+                    if($validator->fails()){
+                        return $this->sendError('Error de validación.', $validator->errors());       
+                    }
                     $variable2 = $input['precio_fin'];
-                    $eventos = Evento::with(array('palcos' => function($query) use ($variable, $variable2)
+                    $eventos->with(array('palcos' => function($query) use ($variable, $variable2)
                         {  
                             $query->where('precio_venta','>=', $variable);
                             $query->where('precio_venta','<=', $variable2);
-                        }))
-                        ->with('artists')
-                        ->with('tipoevento')                        
-                        ->with('imagens')
-                        ->where('status', 1)
-                        ->get();
+                        }));
+                }else{
+
+                    $eventos->with(array('palcos' => function($query) use ($variable)
+                        {  
+                            $query->where('precio_venta','>=', $variable);
+                        }));
                 }
+                
             }
 
             if(!is_null($input['artistas'])){
-                $artistas = array();
-                foreach ($input['artistas'] as $key) {
-                    array_push($artistas, $key["id_artist"]); 
-                }
-                $eventos = Evento::with(array('artists' => function($query) use ($artistas)
+                $artistas = $input['artistas'];
+                $eventos->with(array('artists' => function($query) use ($artistas)
                         {  
-                            $query->whereIn('id', $artistas);                           
-                        }))
-                        ->with('palcos')
-                        ->with('tipoevento')                        
-                        ->with('imagens')
-                        ->where('status', 1)
-                        ->get();
-                
+                            $item = 0;
+                            foreach ($artistas as $key) {
+                                if($item == 0){
+                                    $query->where('id_artista', $key);
+                                }else{
+                                    $query->orWhere('id_artista', $key);
+                                }
+                                $item = $item + 1;
+                            }
+                            $query->whereNotNull('id_artista');
+
+                        }));
+            }else{
+                $eventos->with('artists');
             }
 
             if(!is_null($input['tipos_evento'])){
                 $tipos_evento = array();
                 foreach ($input['tipos_evento'] as $key) {
-                    array_push($tipos_evento, $key["id_tipo_evento"]); 
+                    array_push($tipos_evento, $key); 
                 }
-                $eventos->whereIn('id_tipo_evento',$tipos_evento);
+                $eventos->with('tipoevento')->whereIn('id_tipo_evento',$tipos_evento);
+            }else{
+                $eventos->with('tipoevento');
             }
+
 
             if(!is_null($input['fecha_inicio'])){
                 $validator = Validator::make($input, [
                         'fecha_inicio' => 'date',                  
-                    ]);
-                $eventos->where('fecha_evento',$input['fecha_inicio']);
+                    ]);                
                 if(!is_null($input['fecha_fin'])){
                     $validator = Validator::make($input, [
                         'fecha_fin' => 'date',                  
                     ]);
-                    $eventos->whereBetween('fecha_evento',$input['fecha_inicio'], $input['fecha_fin']);
+                    $eventos->whereBetween('fecha_evento',[$input['fecha_inicio'], $input['fecha_fin']]);
+                }else{
+                    $eventos->whereDate('fecha_evento',$input['fecha_inicio']);
                 }
             }
 
             
-            
-            $lista_eventos = compact('eventos');
+            $lista_eventos = $eventos->where('evento.status', 1)
+                            ->get();
+
+            $filtrado = json_decode($lista_eventos);                
+            $filtrado = array_filter($filtrado, function($val) { return $val->artists != null; });
+            $lista_eventos = $filtrado;
             return $this->sendResponse($lista_eventos, 'Listado de eventos devuelto con éxito');
 
         }else{

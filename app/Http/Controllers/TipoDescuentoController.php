@@ -13,15 +13,27 @@ use Validator;
 class TipoDescuentoController extends BaseController
 {
     /**
-     * Lista de la tabla tipo_descuento.
+     * Lista de la tabla tipo descuento paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        //
-         $tipoDescuento = TipoDescuento::paginate(15);
+        
+        $tipoDescuento = TipoDescuento::paginate(15);
+        return $this->sendResponse($tipoDescuento->toArray(), 'Tipos de descuentos devueltos con éxito');
+    }
 
+
+    /**
+     * Lista de los tipos de descuento.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tipo_descuento_all()
+    {
+        
+        $tipoDescuento = TipoDescuento::get();
         return $this->sendResponse($tipoDescuento->toArray(), 'Tipos de descuentos devueltos con éxito');
     }
 

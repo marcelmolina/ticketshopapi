@@ -14,14 +14,25 @@ use Validator;
 class MonedaController extends BaseController
 {
     /**
-     * Lista de la tabla moneda.
+     * Lista de la tabla moneda paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $moneda = Moneda::paginate(15);
+        return $this->sendResponse($moneda->toArray(), 'Monedas devueltas con éxito');
+    }
 
+
+    /**
+     * Lista de las monedas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function moneda_all()
+    {
+        $moneda = Moneda::get();
         return $this->sendResponse($moneda->toArray(), 'Monedas devueltas con éxito');
     }
 

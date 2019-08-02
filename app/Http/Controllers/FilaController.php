@@ -15,14 +15,28 @@ use Illuminate\Support\Facades\Input;
 class FilaController extends BaseController
 {
     /**
-     * Lista de la tabla fila.
+     * Lista de la tabla fila paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
        
-        $fila = Fila::paginate(15);
+        $fila = Fila::with('localidad')->paginate(15);
+
+        return $this->sendResponse($fila->toArray(), 'Filas devueltas con éxito');
+    }
+
+
+    /**
+     * Lista de la todas las filas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function fila_all()
+    {
+       
+        $fila = Fila::with('localidad')->get();
 
         return $this->sendResponse($fila->toArray(), 'Filas devueltas con éxito');
     }
@@ -119,7 +133,7 @@ class FilaController extends BaseController
     public function show($id)
     {
          //
-        $fila = Fila::find($id);
+        $fila = Fila::with('localidad')->find($id);
 
 
         if (is_null($fila)) {

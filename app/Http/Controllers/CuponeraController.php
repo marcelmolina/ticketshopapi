@@ -14,13 +14,25 @@ use Illuminate\Support\Facades\Input;
 class CuponeraController extends BaseController
 {
     /**
-     * Lista de la tabla cuponera.
+     * Lista de la tabla cuponera paginadas.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $cuponera = Cuponera::paginate(15);
+        return $this->sendResponse($cuponera->toArray(), 'Cuponeras devueltas con éxito');
+    }
+
+
+    /**
+     * Lista de la tabla de todas las cuponeras.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function cuponera_all()
+    {
+        $cuponera = Cuponera::get();
         return $this->sendResponse($cuponera->toArray(), 'Cuponeras devueltas con éxito');
     }
 

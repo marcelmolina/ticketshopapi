@@ -16,29 +16,29 @@ use Illuminate\Support\Facades\Input;
 class LocalidadController extends BaseController
 {
     /**
-     * Lista de la tabla localidad.
+     * Lista de la tabla localidad paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        $localidad = Localidad::paginate(15);
-
+        $localidad = Localidad::with('tribuna')->paginate(15);
         return $this->sendResponse($localidad->toArray(), 'Localidades devueltas con éxito');
     }
 
 
     /**
-     * Listado detallado de las localidades.
+     * Lista de todas las localidades.
      *
      * @return \Illuminate\Http\Response
      */
-    public function listado_detalle_localidades()
+    public function localidad_all()
     {
-        
-        $localidad = Localidad::with('tribuna')->paginate(15);       
-        return $this->sendResponse($localidad, 'Localidades devueltas con éxito');
+        $localidad = Localidad::with('tribuna')->get();
+
+        return $this->sendResponse($localidad->toArray(), 'Localidades devueltas con éxito');
     }
+   
 
     /**
      * Buscar localidades por descripción.

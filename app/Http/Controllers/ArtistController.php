@@ -17,15 +17,27 @@ use Illuminate\Support\Facades\Input;
 class ArtistController extends BaseController
 {
     /**
-     * Lista de la tabla artista.
+     * Lista de la tabla artista paginados.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        //
+        
         $artist = Artist::paginate(15);
+        return $this->sendResponse($artist->toArray(), 'Artistas devueltos con éxito');
+    }
 
+
+    /**
+     * Lista de la tabla de todos los artista.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function artistas_all()
+    {
+        
+        $artist = Artist::get();
         return $this->sendResponse($artist->toArray(), 'Artistas devueltos con éxito');
     }
 

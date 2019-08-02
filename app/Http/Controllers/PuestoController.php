@@ -16,29 +16,32 @@ use Validator;
 class PuestoController extends BaseController
 {
     /**
-     * Lista de la tabla puesto.
+     * Lista de la tabla puesto paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        $puesto = Puesto::paginate(15);
+        $puesto = Puesto::with('localidad')                 
+                  ->with('fila')
+                  ->with('palcos')               
+                  ->paginate(15);
         return $this->sendResponse($puesto->toArray(), 'Puestos devueltos con éxito');
     }
 
 
      /**
-     * Listado detallado de los puestos.
+     * Listado de los puestos.
      *
      * @return \Illuminate\Http\Response
      */
-    public function listado_detalle_puestos()
+    public function puesto_all()
     {       
         
         $puesto = Puesto::with('localidad')                 
                   ->with('fila')
                   ->with('palcos')               
-                  ->paginate(15);
+                  ->get();
         
         return $this->sendResponse($puesto, 'Puestos devueltos con éxito');
     }

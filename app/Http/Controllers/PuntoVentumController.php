@@ -15,13 +15,25 @@ use Illuminate\Support\Facades\Input;
 class PuntoVentumController extends BaseController
 {
     /**
-     * Lista de la tabla punto_venta.
+     * Lista de la tabla punto_venta paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $punto_venta = PuntoVentum::with("ciudades")->paginate(15);
+        return $this->sendResponse($punto_venta->toArray(), 'Puntos de ventas devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de los puntos de venta.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function puntoventum_all()
+    {
+        $punto_venta = PuntoVentum::with("ciudades")->get();
         return $this->sendResponse($punto_venta->toArray(), 'Puntos de ventas devueltos con éxito');
     }
 

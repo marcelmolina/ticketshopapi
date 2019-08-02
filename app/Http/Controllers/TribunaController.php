@@ -15,17 +15,27 @@ use Illuminate\Support\Facades\Input;
 class TribunaController extends BaseController
 {
      /**
-     * Lista de la tabla tribuna.
+     * Lista de la tabla tribuna paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $tribuna = Tribuna::paginate(15);
-
         return $this->sendResponse($tribuna->toArray(), 'Tribunas devueltas con éxito');
     }
 
+
+    /**
+     * Lista de las tribunas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tribuna_all()
+    {
+        $tribuna = Tribuna::get();
+        return $this->sendResponse($tribuna->toArray(), 'Tribunas devueltas con éxito');
+    }
 
     /**
      * Listado detallado de las tribunas.

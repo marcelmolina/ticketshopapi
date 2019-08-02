@@ -14,13 +14,25 @@ use Validator;
 class PreVentumController extends BaseController
 {
     /**
-     * Lista de la tabla preventa.
+     * Lista de la tabla preventa paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $preventa = Preventum::with("evento")->paginate(15);
+        return $this->sendResponse($preventa->toArray(), 'Preventa devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de las preventas.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function preventum_all()
+    {
+        $preventa = Preventum::with("evento")->get();
         return $this->sendResponse($preventa->toArray(), 'Preventa devueltos con éxito');
     }
 
@@ -96,6 +108,30 @@ class PreVentumController extends BaseController
 
         $preventa = Preventum::create($request->all());        
         return $this->sendResponse($preventa->toArray(), 'Preventa creada con éxito');
+    }
+
+
+    /**
+     * Listado de preventas por evento
+     *
+     * [Se filtra por el ID del evento]
+     *
+     * @param  \App\Models\Evento  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function listado_preventasEvento($id)
+    {
+        
+        $evento = Evento::find($id);
+        if(!$evento){
+            return $this->sendError('No se encuentra el evento especificado');
+        }
+
+        $preventa = Preventum::where('id_evento','=',$id)->get();
+        if (count($preventa) == 0) {
+            return $this->sendError('No se encuentran preventas por evento especificado');
+        }
+        return $this->sendResponse($preventa->toArray(), 'Preventas devueltas con éxito');
     }
 
     /**

@@ -13,14 +13,25 @@ use Validator;
 class TipoCuponController extends BaseController
 {
     /**
-     * Lista de la tabla tipo_cupon.
+     * Lista de la tabla tipo cupon paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-         $tipoCupon = TipoCupon::paginate(15);
+        $tipoCupon = TipoCupon::paginate(15);
+        return $this->sendResponse($tipoCupon->toArray(), 'Tipos de cupones devueltos con éxito');
+    }
 
+
+    /**
+     * Lista de los tipos de cupon.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tipo_cupon_all()
+    {
+        $tipoCupon = TipoCupon::get();
         return $this->sendResponse($tipoCupon->toArray(), 'Tipos de cupones devueltos con éxito');
     }
 

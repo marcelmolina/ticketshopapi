@@ -15,13 +15,25 @@ use Validator;
 class TipoCostoController extends BaseController
 {
     /**
-     * Lista de la tabla tipo_costo.
+     * Lista de la tabla tipo costo paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $tipo_costo = TipoCosto::paginate(15);
+        return $this->sendResponse($tipo_costo->toArray(), 'Tipos de costo devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de los tipos de costo.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tipo_costo_all()
+    {
+        $tipo_costo = TipoCosto::get();
         return $this->sendResponse($tipo_costo->toArray(), 'Tipos de costo devueltos con éxito');
     }
     

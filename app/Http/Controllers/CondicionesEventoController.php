@@ -80,7 +80,7 @@ class CondicionesEventoController extends BaseController
      */
     public function show($id)
     {
-        $condicion_evento = CondicionesEvento::where('id_evento','=',$id)->get();
+        $condicion_evento = CondicionesEvento::with("evento")->with("condicion")->where('id_evento','=',$id)->get();
         if (count($condicion_evento) == 0) {
             return $this->sendError('El evento no contiene condiciones asociadas');
         }

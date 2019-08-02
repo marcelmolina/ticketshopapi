@@ -16,13 +16,26 @@ use Validator;
 class CiudadController extends BaseController
 {
     /**
-     * Lista de la tabla ciudades.
+     * Lista de la tabla ciudades paginados.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-         $ciudad = Ciudad::paginate(15);
+         $ciudad = Ciudad::with('departamento')->paginate(15);
+
+        return $this->sendResponse($ciudad->toArray(), 'Ciudades devueltas con éxito');
+    }
+
+
+    /**
+     * Lista de la tabla de todas las ciudades.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function ciudades_all()
+    {
+         $ciudad = Ciudad::with('departamento')->get();
 
         return $this->sendResponse($ciudad->toArray(), 'Ciudades devueltas con éxito');
     }
@@ -99,7 +112,7 @@ class CiudadController extends BaseController
     public function show($id)
     {
         
-        $ciudad = Ciudad::find($id);
+        $ciudad = Ciudad::with('departamento')->find($id);
         if (is_null($ciudad)) {
             return $this->sendError('Ciudad no encontrado');
         }

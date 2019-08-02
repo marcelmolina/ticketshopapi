@@ -16,14 +16,28 @@ use Validator;
 class AuditorioController extends BaseController
 {
      /**
-     * Lista de la tabla auditorio.
+     * Lista de la tabla auditorio paginado.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
        
-         $auditorio = Auditorio::paginate(15);
+         $auditorio = Auditorio::with('pais')->with('ciudad')->with('departamento')->paginate(15);
+
+         return $this->sendResponse($auditorio->toArray(), 'Auditorios devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de la tabla de todos los auditorio.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function auditorio_all()
+    {
+       
+         $auditorio = Auditorio::with('pais')->with('ciudad')->with('departamento')->get();
 
          return $this->sendResponse($auditorio->toArray(), 'Auditorios devueltos con éxito');
     }
@@ -154,8 +168,8 @@ class AuditorioController extends BaseController
      */
     public function show($id)
     {
-        //
-         $auditorio = Auditorio::find($id);
+        
+         $auditorio = Auditorio::with('pais')->with('ciudad')->with('departamento')->find($id);
 
 
         if (is_null($auditorio)) {

@@ -15,7 +15,7 @@ use Validator;
 class CondicionController extends BaseController
 {
     /**
-     * Lista de la tabla condiciones.
+     * Lista de la tabla condiciones paginadas.
      *
      * @return \Illuminate\Http\Response
      */
@@ -26,6 +26,18 @@ class CondicionController extends BaseController
         return $this->sendResponse($condiciones->toArray(), 'Condiciones devueltas con éxito');
     }
 
+
+    /**
+     * Lista de la tabla de todas las condiciones.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function condiciones_all()
+    {
+        $condiciones = Condicion::get();
+
+        return $this->sendResponse($condiciones->toArray(), 'Condiciones devueltas con éxito');
+    }
 
       /**
      * Buscar Condición por descripción.

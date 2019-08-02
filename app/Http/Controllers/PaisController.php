@@ -16,16 +16,30 @@ use Validator;
 class PaisController extends BaseController
 {
     /**
-     * Lista de la tabla pais.
+     * Lista de la tabla pais paginada.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $pais = Pais::paginate(15);
-
         return $this->sendResponse($pais->toArray(), 'Paises devueltos con éxito');
     }
+
+
+
+    /**
+     * Lista de los paises.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function pais_all()
+    {
+        $pais = Pais::get();
+        return $this->sendResponse($pais->toArray(), 'Paises devueltos con éxito');
+    }
+
+
 
     /**
      * Buscar paises por descripción.

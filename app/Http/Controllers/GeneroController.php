@@ -13,7 +13,7 @@ use Validator;
 class GeneroController extends BaseController
 {
     /**
-     * Lista de la tabla genero.
+     * Lista de la tabla genero paginados.
      *
      * @return \Illuminate\Http\Response
      */
@@ -21,7 +21,19 @@ class GeneroController extends BaseController
     {
         
         $genero = Genero::paginate(15);
+        return $this->sendResponse($genero->toArray(), 'Géneros devueltos con éxito');
+    }
 
+
+    /**
+     * Lista de la tabla de todos los generos.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function generos_all()
+    {
+        
+        $genero = Genero::get();
         return $this->sendResponse($genero->toArray(), 'Géneros devueltos con éxito');
     }
 

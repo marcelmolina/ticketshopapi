@@ -13,14 +13,27 @@ use Validator;
 class GrupsVendedoreController extends BaseController
 {
     /**
-     * Listado de los grupos de vendedores.
+     * Listado de los grupos de vendedores paginados.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        //
+        
         $grups_vendedores = GrupsVendedore::paginate(15);
+        return $this->sendResponse($grups_vendedores->toArray(), 'Grupos de vendedores devueltos con éxito');
+    }
+
+
+    /**
+     * Listado de todos los grupos de vendedores.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function groups_vendedores_all()
+    {
+        
+        $grups_vendedores = GrupsVendedore::get();
         return $this->sendResponse($grups_vendedores->toArray(), 'Grupos de vendedores devueltos con éxito');
     }
 

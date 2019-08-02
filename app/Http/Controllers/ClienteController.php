@@ -15,13 +15,26 @@ use Illuminate\Support\Facades\Input;
 class ClienteController extends BaseController
 {
     /**
-     * Lista de la tabla cliente.
+     * Lista de la tabla cliente paginados.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
          $cliente = Cliente::paginate(15);
+
+        return $this->sendResponse($cliente->toArray(), 'Clientes devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de la tabla de todos los cliente.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function clientes_all()
+    {
+         $cliente = Cliente::get();
 
         return $this->sendResponse($cliente->toArray(), 'Clientes devueltos con éxito');
     }

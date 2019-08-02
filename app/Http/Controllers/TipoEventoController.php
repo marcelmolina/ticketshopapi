@@ -14,7 +14,7 @@ use Validator;
 class TipoEventoController extends BaseController
 {
     /**
-     * Lista de la tabla tipo_evento.
+     * Lista de la tabla tipo evento paginada.
      *
      * @return \Illuminate\Http\Response
      */
@@ -22,6 +22,19 @@ class TipoEventoController extends BaseController
     {
        
         $tipoEventos = TipoEvento::paginate(15);
+        return $this->sendResponse($tipoEventos->toArray(), 'Tipos de eventos devueltos con éxito');
+    }
+
+
+    /**
+     * Lista de los tipos de evento.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function tipo_evento_all()
+    {
+       
+        $tipoEventos = TipoEvento::get();
         return $this->sendResponse($tipoEventos->toArray(), 'Tipos de eventos devueltos con éxito');
     }
 

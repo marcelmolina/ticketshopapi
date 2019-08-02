@@ -17,13 +17,25 @@ use Validator;
 class DepartamentoController extends BaseController
 {
     /**
-     * Lista de la tabla departamento.
+     * Lista de la tabla departamento paginado.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-         $departamento = Departamento::paginate(15);
+         $departamento = Departamento::with('pais')->paginate(15);
+
+        return $this->sendResponse($departamento->toArray(), 'Departamentos devueltos con éxito');
+    }
+
+    /**
+     * Lista de todos los departamento.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function departamento_all()
+    {
+         $departamento = Departamento::with('pais')->get();
 
         return $this->sendResponse($departamento->toArray(), 'Departamentos devueltos con éxito');
     }
@@ -102,7 +114,7 @@ class DepartamentoController extends BaseController
     public function show($id)
     {
         
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::with('pais')->find($id);
         if (is_null($departamento)) {
             return $this->sendError('Departamento no encontrado');
         }
