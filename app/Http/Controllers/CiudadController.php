@@ -40,6 +40,20 @@ class CiudadController extends BaseController
         return $this->sendResponse($ciudad->toArray(), 'Ciudades devueltas con éxito');
     }
 
+
+    /**
+     * Lista de todas las ciudades por departamento.
+     * Se debe enviar el ID del departamento por GET
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function ciudades_departamento(Request $request)
+    {
+        $departamento = $request->get('departamento');
+        $ciudades = Ciudad::with('departamento')->where('id_departamento', $departamento)->get();
+        return $this->sendResponse($ciudades->toArray(), 'Ciudades devueltas con éxito');
+    }
+
     /**
      * Buscar Ciudades por descripcion.
      *@bodyParam nombre string Descripcion de la ciudad.

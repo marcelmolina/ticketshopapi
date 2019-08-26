@@ -21,7 +21,7 @@ class TribunaController extends BaseController
      */
     public function index()
     {
-        $tribuna = Tribuna::paginate(15);
+        $tribuna = Tribuna::with('auditorio')->with('localidads')->with('detalle_descuentos')->paginate(15);
         return $this->sendResponse($tribuna->toArray(), 'Tribunas devueltas con éxito');
     }
 
@@ -33,7 +33,7 @@ class TribunaController extends BaseController
      */
     public function tribuna_all()
     {
-        $tribuna = Tribuna::get();
+        $tribuna = Tribuna::with('auditorio')->with('localidads')->with('detalle_descuentos')->get();
         return $this->sendResponse($tribuna->toArray(), 'Tribunas devueltas con éxito');
     }
 
@@ -45,7 +45,7 @@ class TribunaController extends BaseController
     public function listado_detalle_tribunas()
     {
         
-        $tribunas = Tribuna::with('auditorio')->paginate(15);       
+        $tribunas = Tribuna::with('auditorio')->with('localidads')->with('detalle_descuentos')->paginate(15);       
         return $this->sendResponse($tribunas, 'Tribunas devueltas con éxito');
     }
 
@@ -66,14 +66,16 @@ class TribunaController extends BaseController
        if(isset($input["nombre"]) && $input["nombre"] != null){
             
             $input = $request->all();
-            $generos = Tribuna::with('auditorio')
+            $tribunas = Tribuna::with('auditorio')
+                        ->with('localidads')
+                        ->with('detalle_descuentos')
                         ->where('tribuna.nombre','like', '%'.strtolower($input["nombre"]).'%')
                         ->get();
-            return $this->sendResponse($generos->toArray(), 'Todas las tribunas filtradas');
+            return $this->sendResponse($tribunas->toArray(), 'Todas las tribunas filtradas');
        }else{
             
-            $generos = Tribuna::with('auditorio')->get();
-            return $this->sendResponse($generos->toArray(), 'Todas las tribunas devueltas'); 
+            $tribunas = Tribuna::with('auditorio')->with('localidads')->with('detalle_descuentos')->get();
+            return $this->sendResponse($tribunas->toArray(), 'Todas las tribunas devueltas'); 
        }
 
         
@@ -122,7 +124,7 @@ class TribunaController extends BaseController
     public function show($id)
     {
         
-        $tribuna = Tribuna::find($id);
+        $tribuna = Tribuna::with('auditorio')->with('localidads')->with('detalle_descuentos')->find($id);
 
         if (is_null($tribuna)) {
             return $this->sendError('Tribuna no encontrada');

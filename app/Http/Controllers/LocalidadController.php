@@ -22,7 +22,7 @@ class LocalidadController extends BaseController
      */
     public function index()
     {
-        $localidad = Localidad::with('tribuna')->paginate(15);
+        $localidad = Localidad::with('tribuna')->with('filas')->with('palcos')->with('puestos')->paginate(15);
         return $this->sendResponse($localidad->toArray(), 'Localidades devueltas con éxito');
     }
 
@@ -34,7 +34,7 @@ class LocalidadController extends BaseController
      */
     public function localidad_all()
     {
-        $localidad = Localidad::with('tribuna')->get();
+        $localidad = Localidad::with('tribuna')->with('filas')->with('palcos')->with('puestos')->get();
 
         return $this->sendResponse($localidad->toArray(), 'Localidades devueltas con éxito');
     }
@@ -56,19 +56,19 @@ class LocalidadController extends BaseController
        if(isset($input["nombre"]) && $input["nombre"] != null){
             
             $input = $request->all();
-            $generos = \DB::table('localidad')
+            $localidades = \DB::table('localidad')
                 ->join('tribuna','tribuna.id','=','localidad.id_tribuna')
                 ->where('localidad.nombre','like', '%'.strtolower($input["nombre"]).'%')
-                ->select('localidad.*', 'tribuna.nombre AS tribuna_nombre')
+                ->select('localidad.*', 'tribuna.*')
                 ->get();
-            return $this->sendResponse($generos->toArray(), 'Todas las localidades filtradas');
+            return $this->sendResponse($localidades->toArray(), 'Todas las localidades filtradas');
        }else{
             
-            $generos = \DB::table('localidad') 
+            $localidades = \DB::table('localidad') 
                 ->join('tribuna','tribuna.id','=','localidad.id_tribuna')               
-                ->select('localidad.*', 'tribuna.nombre AS tribuna_nombre')
+                ->select('localidad.*', 'tribuna.*')
                 ->get();
-            return $this->sendResponse($generos->toArray(), 'Todas las localidades devueltas'); 
+            return $this->sendResponse($localidades->toArray(), 'Todas las localidades devueltas'); 
        }
 
         
@@ -119,7 +119,7 @@ class LocalidadController extends BaseController
     public function show($id)
     {
         //
-        $localidad = Localidad::find($id);
+        $localidad = Localidad::with('filas')->with('palcos')->with('puestos')->find($id);
 
 
         if (is_null($localidad)) {

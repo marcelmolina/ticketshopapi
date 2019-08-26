@@ -74,7 +74,7 @@ class PuntoVentumController extends BaseController
      *
      *@bodyParam nombre_razon string required Nombre razon del punto de venta.
      *@bodyParam identificacion string required required Identificacion del punto de venta.
-     *@bodyParam tipo_identificacion boolean required Tipo de identificacion punto de venta.
+     *@bodyParam tipo_identificacion int required Tipo de identificacion punto de venta.
      *@bodyParam direccion string Direccion del punto de venta.
      *@bodyParam telefono string Telefono del punto de venta.
      *@bodyParam responsable string required Responsable del punto de venta.
@@ -101,7 +101,7 @@ class PuntoVentumController extends BaseController
         $validator = Validator::make($request->all(), [
             'nombre_razon' => 'required',  
             'identificacion' => 'required',
-            'tipo_identificacion' => 'required|boolean',
+            'tipo_identificacion' => 'required|integer',
             'responsable' => 'required',
             'zona' => 'required',
             'email' => 'required|email',
@@ -145,7 +145,7 @@ class PuntoVentumController extends BaseController
      *
      *@bodyParam nombre_razon string required Nombre razon del punto de venta.
      *@bodyParam identificacion string required required Identificacion del punto de venta.
-     *@bodyParam tipo_identificacion boolean required Tipo de identificacion punto de venta.
+     *@bodyParam tipo_identificacion int required Tipo de identificacion punto de venta.
      *@bodyParam direccion string Direccion del punto de venta.
      *@bodyParam telefono string Telefono del punto de venta.
      *@bodyParam responsable string required Responsable del punto de venta.
@@ -176,7 +176,7 @@ class PuntoVentumController extends BaseController
         $validator = Validator::make($input, [
             'nombre_razon' => 'required',  
             'identificacion' => 'required',
-            'tipo_identificacion' => 'required|boolean',
+            'tipo_identificacion' => 'required|integer',
             'responsable' => 'required',
             'zona' => 'required',
             'email' => 'required|email',

@@ -49,8 +49,6 @@ class Usuario extends Model implements AuthenticatableContract
 	protected $dates = ['deleted_at'];
 
 	protected $casts = [
-		//'password' => 'boolean',
-		'tipo_identificacion' => 'bool',
 		'id_rol' => 'int'
 	];
 

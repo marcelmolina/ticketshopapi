@@ -32,7 +32,6 @@ class Cliente extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'tipo_identificacion' => 'bool',
 		'tipo_cliente' => 'bool'
 	];
 
@@ -41,8 +40,9 @@ class Cliente extends Eloquent
 		'tipo_identificacion',
 		'nombrerazon',
 		'direccion',
-		'ciudad',
-		'departamento',
+		'id_pais',
+		'id_ciudad',
+		'id_departamento',
 		'tipo_cliente',
 		'email',
 		'telefono'
@@ -52,4 +52,20 @@ class Cliente extends Eloquent
 	{
 		return $this->hasMany(\App\Models\Evento::class, 'id_cliente');
 	}
+
+	public function ciudad()
+	{
+		return $this->belongsTo(\App\Models\Ciudad::class, 'id_ciudad');
+	}
+
+	public function departamento()
+	{
+		return $this->belongsTo(\App\Models\Departamento::class, 'id_departamento');
+	}
+
+	public function pais()
+	{
+		return $this->belongsTo(\App\Models\Pais::class, 'id_pais');
+	}
+
 }

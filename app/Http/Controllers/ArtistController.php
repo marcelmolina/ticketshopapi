@@ -6,9 +6,11 @@ use App\Models\Artist;
 use App\Models\ArtistaEvento;
 use App\Models\Genero;
 use App\Models\ImagenArtist;
+use App\Models\Imagen;
 use Illuminate\Http\Request;
-use Validator;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Input;
+use Validator;
 /**
  * @group Administración de Artista
  *
@@ -81,7 +83,7 @@ class ArtistController extends BaseController
     public function listado_detalle_artistas()
     {
         
-        $artist = Artist::with('genero')->paginate(15);
+        $artist = Artist::with('imagens')->with('genero')->paginate(15);
         $lista_artist = compact('artist');
         return $this->sendResponse($lista_artist, 'Artistas devueltos con éxito');
     }
@@ -91,10 +93,13 @@ class ArtistController extends BaseController
      *@bodyParam nombre string required El nombre del artista.
      *@bodyParam manager string required Nombre del manager del artista.
      *@bodyParam id_genero int required id del genero.
+     *@bodyParam imagenes file Imagenes del Artista (Se envían como array).
      *@response{
      *       "nombre" : "Artist",
      *       "manager" : "Manager Artist",
-     *       "id_genero": 1
+     *       "id_genero": 1,
+     *       "imagenes[0]": photo.jpeg (File),
+     *       "imagenes[1]": photo2.jpeg (File)
      *     }
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -105,7 +110,9 @@ class ArtistController extends BaseController
          $validator = Validator::make($request->all(), [
             'nombre' => 'required',            
             'manager' => 'required',
-            'id_genero' => 'required'
+            'id_genero' => 'required',
+            'imagenes' => 'nullable|array',
+            'imagenes.*' => 'nullable|mimes:jpeg,jpg,bmp,png'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -115,8 +122,39 @@ class ArtistController extends BaseController
             return $this->sendError('El Género indicado no existe');
         }
 
-          $artist=Artist::create($request->all());        
-         return $this->sendResponse($artist->toArray(), 'Artista creado con éxito');
+        $artist = new Artist();
+        $artist->nombre = $request->input('nombre');
+        $artist->manager = $request->input('manager');
+        $artist->id_genero = $request->input('id_genero');
+        $artist->save();
+
+                
+        if($request->hasfile('imagenes')){
+            $imagenes = $request->file('imagenes');
+            foreach ($imagenes as $imagen_item) {
+                    
+                $file = $imagen_item;                
+                $name = $file->getClientOriginalName();                            
+                $fileUrl = Storage::disk('public')->put('imagenes', $file);                
+                $urlFile = env('APP_URL').'storage/'.$fileUrl;
+               
+                $imagen = new Imagen();
+                $imagen->url = $urlFile; 
+                $imagen->nombre = $name;
+                $imagen->save();
+
+                $artist_img = new ImagenArtist();  
+                $artist_img->id_artista = $artist->id;
+                $artist_img->id_imagen = $imagen->id;
+                $artist_img ->save();
+                
+            }
+
+            $artist_resul = Artist::with('imagens')->find($artist->id);
+            return $this->sendResponse($artist_resul->toArray(), 'Artista creado con éxito');
+        }
+
+        return $this->sendResponse($artist->toArray(), 'Artista creado con éxito');
     }
 
     /**
@@ -130,7 +168,7 @@ class ArtistController extends BaseController
     public function show($id)
     {
         //
-         $artist = Artist::find($id);
+         $artist = Artist::with('imagens')->with('genero')->find($id);
 
 
         if (is_null($artist)) {
@@ -141,45 +179,53 @@ class ArtistController extends BaseController
         return $this->sendResponse($artist->toArray(), 'Artista devuelto con éxito');
     }
 
+
+    
+
+
  
      /**
      * Actualiza un elemeto de la tabla artista 
      *
-     * [Se filtra por el ID]
      *@bodyParam nombre string required El nombre del artista.
      *@bodyParam manager string required Nombre del manager del artista.
      *@bodyParam id_genero int required id del genero.
+     *@bodyParam imagenes file Imagenes del Artista (Se envían como array).
      *@response{
      *       "nombre" : "Artist Edit",
      *       "manager" : "Manager Artist",
-     *       "id_genero": 1
+     *       "id_genero": 1,
+     *       "imagenes[0]": photo.jpeg (File),
+     *       "imagenes[1]": photo2.jpeg (File)
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Artist  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($id, Request $request)
+    public function updateArtist(Request $request)
     {
        
         $input = $request->all();
 
-
         $validator = Validator::make($input, [
+            'id_artist' => 'required',
             'nombre' => 'required',            
             'manager' => 'required',
-            'id_genero' => 'required'           
+            'id_genero' => 'required',
+            'imagenes' => 'nullable|array',
+            'imagenes.*' => 'nullable|mimes:jpeg,jpg,bmp,png'
         ]);
 
 
         if($validator->fails()){
             return $this->sendError('Error de validación', $validator->errors());       
         }
-         $genero = Genero::find($request->input('id_genero'));
+        $genero = Genero::find($request->input('id_genero'));
         if (is_null($genero)) {
             return $this->sendError('El Género indicado no existe');
         }
-
+        $id = $request->input('id_artist');
         $artist2 = Artist::find($id);
         if (is_null($artist2)) {
                     return $this->sendError('Artista no encontrado');
@@ -187,7 +233,43 @@ class ArtistController extends BaseController
         $artist2->nombre = $input['nombre'];
         $artist2->manager = $input['manager'];
         $artist2->id_genero = $input['id_genero'];         
-         $artist2->save();
+        $artist2->save();
+
+        
+        if($request->hasfile('imagenes')){
+
+            $imagen_art = ImagenArtist::with('imagen')->where('id_artista', $id)->get();
+            foreach ($imagen_art as $imagens) {
+                $cad = explode('/',$imagens['imagen']['url']);
+                Storage::disk('public')->delete($cad[4].'/'.$cad[5]);
+
+                ImagenArtist::where('id_imagen', $imagens['id_imagen'])->delete();
+                Imagen::find($imagens['imagen']['id'])->delete();
+            }
+            
+
+            $imagenes = $request->file('imagenes');
+            foreach ($imagenes as $imagen_item) {
+                    
+                $file = $imagen_item;                
+                $name = $file->getClientOriginalName();                            
+                $fileUrl = Storage::disk('public')->put('imagenes', $file);                
+                $urlFile = env('APP_URL').'storage/'.$fileUrl;
+               
+                $imagen = new Imagen();
+                $imagen->url = $urlFile; 
+                $imagen->nombre = $name;
+                $imagen->save();
+
+                $artist_img = new ImagenArtist();  
+                $artist_img->id_artista = $id;
+                $artist_img->id_imagen = $imagen->id;
+                $artist_img ->save();
+                
+            }
+            $artist_resul = Artist::with('imagens')->find($id);
+            return $this->sendResponse($artist_resul->toArray(), 'Artista creado con éxito');
+        }
         
 
         return $this->sendResponse($artist2->toArray(), 'Artista actualizado con éxito');

@@ -62,12 +62,14 @@ class PalcoController extends BaseController
             
             $input = $request->all();
             $palco = Palco::with('localidad')
+                ->with('puestos')
                 ->where('palco.nombre','like', '%'.strtolower($input["nombre"]).'%')
                 ->get();
             return $this->sendResponse($palco->toArray(), 'Todos los Palcos filtrados');
        }else{
             
             $palco = Palco::with('localidad')
+                ->with('puestos')
                 ->get();
             return $this->sendResponse($palco->toArray(), 'Todos los Palcos devueltos'); 
        }
@@ -117,7 +119,7 @@ class PalcoController extends BaseController
     public function show($id)
     {
         
-        $palco = Palco::find($id);
+        $palco = Palco::with('localidad')->with('puestos')->find($id);
 
         if (is_null($palco)) {
             return $this->sendError('Palco no encontrado');

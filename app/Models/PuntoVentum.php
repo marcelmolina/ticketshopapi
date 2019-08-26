@@ -36,10 +36,7 @@ class PuntoVentum extends Eloquent
 {
 	public $timestamps = false;
 
-	protected $casts = [
-		'tipo_identificacion' => 'bool'
-	];
-
+	
 	protected $fillable = [
 		'nombre_razon',
 		'identificacion',

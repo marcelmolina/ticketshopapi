@@ -33,7 +33,7 @@ class Domicilio extends Eloquent
 
 	protected $casts = [
 		'id_detalle_venta' => 'int',
-		'status' => 'bool'
+		'status' => 'int'
 	];
 
 	protected $dates = [

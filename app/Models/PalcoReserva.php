@@ -52,7 +52,7 @@ class PalcoReserva extends Eloquent
 		'precio_venta' => 'float',
 		'precio_servicio' => 'float',
 		'impuesto' => 'float',
-		'status' => 'float',
+		'status' => 'int',
 		'id_punto_venta' => 'int'
 	];
 

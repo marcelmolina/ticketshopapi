@@ -27,7 +27,7 @@ class Temporada extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'status' => 'bool'
+		'status' => 'int'
 	];
 
 	protected $fillable = [

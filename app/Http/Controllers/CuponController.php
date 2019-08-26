@@ -50,7 +50,7 @@ class CuponController extends BaseController
    /**
      * Agrega un nuevo elemento a la tabla cupon
      *@bodyParam codigo string Codigo del cupon.
-     *@bodyParam status boolean required Status del cupon.
+     *@bodyParam status int required Status del cupon.
      *@bodyParam monto int Monto del cupon.
      *@bodyParam porcentaje_descuento int Porcentaje de descuento del cupon.
      *@bodyParam id_tipo_cupon int required Id del tipo de cupon.
@@ -151,7 +151,7 @@ class CuponController extends BaseController
      *
      * [Se filtra por el ID]
      *@bodyParam codigo string Codigo del cupon.
-     *@bodyParam status boolean required Status del cupon.
+     *@bodyParam status int required Status del cupon.
      *@bodyParam monto int Monto del cupon.
      *@bodyParam porcentaje_descuento int Porcentaje de descuento del cupon.
      *@bodyParam id_tipo_cupon int required Id del tipo de cupon.

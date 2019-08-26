@@ -40,7 +40,7 @@ class UsuarioController extends BaseController
      *@authenticated
      *@bodyParam nombre string required Nombre del usuario.
      *@bodyParam identificacion string Identificacion del usuario.
-     *@bodyParam tipo_identificacion boolean Tipo de identificacion del usuario.
+     *@bodyParam tipo_identificacion int Tipo de identificacion del usuario.
      *@bodyParam direccion string Direccion del usuario.
      *@bodyParam ciudad string Ciudad del usuario.
      *@bodyParam departamento string Departamento del usuario.
@@ -68,7 +68,7 @@ class UsuarioController extends BaseController
         $validator = Validator::make($input, [ 
             'nombre' => 'required|string',
             'identificacion' => 'string',
-            'tipo_identificacion' => 'boolean',
+            'tipo_identificacion' => 'integer',
             'direccion' => 'string',
             'ciudad' => 'string',
             'departamento' => 'string',
@@ -200,7 +200,7 @@ class UsuarioController extends BaseController
      *@bodyParam password string Nueva contraseña del usuario.
      *@bodyParam c_password string Confirmación de la nueva contraseña del usuario.
      *@bodyParam identificacion string Identificacion del usuario.
-     *@bodyParam tipo_identificacion boolean Tipo de identificacion del usuario.
+     *@bodyParam tipo_identificacion int Tipo de identificacion del usuario.
      *@bodyParam direccion string Direccion del usuario.
      *@bodyParam ciudad string Ciudad del usuario.
      *@bodyParam departamento string Departamento del usuario.
@@ -232,7 +232,7 @@ class UsuarioController extends BaseController
             'password' => 'string|min:3',
             'c_password' => 'string|min:3|same:password', 
             'identificacion' => 'string',
-            'tipo_identificacion' => 'boolean',
+            'tipo_identificacion' => 'integer',
             'direccion' => 'string',
             'ciudad' => 'string',
             'departamento' => 'string',

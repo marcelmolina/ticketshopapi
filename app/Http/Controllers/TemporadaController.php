@@ -84,7 +84,7 @@ class TemporadaController extends BaseController
      * Agrega un nuevo elemento a la tabla temporada
      *
      *@bodyParam nombre string required Nombre de la temporada.
-     *@bodyParam status boolean Status de la temporada. Defaults to 0
+     *@bodyParam status int Status de la temporada. Defaults to 0
      *
      * @response {      
      *  "nombre": "Temporada Gold", 
@@ -132,7 +132,7 @@ class TemporadaController extends BaseController
      * Actualiza un elemeto de la tabla temporada 
      *
      *@bodyParam nombre string required Nombre de la temporada.
-     *@bodyParam status boolean Status de la temporada. Defaults to 0
+     *@bodyParam status int Status de la temporada. Defaults to 0
      *
      * [Se filtra por el ID]
      * @response {

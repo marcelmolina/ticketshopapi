@@ -169,7 +169,7 @@ class AuditorioController extends BaseController
     public function show($id)
     {
         
-         $auditorio = Auditorio::with('pais')->with('ciudad')->with('departamento')->find($id);
+         $auditorio = Auditorio::with('tribunas')->with('pais')->with('ciudad')->with('departamento')->find($id);
 
 
         if (is_null($auditorio)) {

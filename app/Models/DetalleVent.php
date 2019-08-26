@@ -46,7 +46,7 @@ class DetalleVent extends Eloquent
 		'precio_venta' => 'float',
 		'precio_servicio' => 'float',
 		'impuesto' => 'float',
-		'status' => 'bool',
+		'status' => 'int',
 		'id_descuento' => 'int',
 		'monto_domicilio' => 'float'
 	];

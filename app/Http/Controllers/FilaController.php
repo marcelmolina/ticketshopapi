@@ -22,7 +22,7 @@ class FilaController extends BaseController
     public function index()
     {
        
-        $fila = Fila::with('localidad')->paginate(15);
+        $fila = Fila::with('localidad')->with('puestos')->paginate(15);
 
         return $this->sendResponse($fila->toArray(), 'Filas devueltas con éxito');
     }
@@ -36,7 +36,7 @@ class FilaController extends BaseController
     public function fila_all()
     {
        
-        $fila = Fila::with('localidad')->get();
+        $fila = Fila::with('localidad')->with('puestos')->get();
 
         return $this->sendResponse($fila->toArray(), 'Filas devueltas con éxito');
     }
@@ -75,12 +75,13 @@ class FilaController extends BaseController
             
             $input = $request->all();
             $filas = Fila::with('localidad')
+                ->with('puestos')
                 ->where('fila.nombre','like', '%'.strtolower($input["nombre"]).'%')
                 ->get();
             return $this->sendResponse($filas->toArray(), 'Todos las Filas filtrados');
        }else{
             
-            $filas = Fila::with('localidad')
+            $filas = Fila::with('localidad')->with('puestos')
                 ->get();
             return $this->sendResponse($filas->toArray(), 'Todos las Filas devueltos'); 
        }
@@ -133,7 +134,7 @@ class FilaController extends BaseController
     public function show($id)
     {
          //
-        $fila = Fila::with('localidad')->find($id);
+        $fila = Fila::with('localidad')->with('puestos')->find($id);
 
 
         if (is_null($fila)) {

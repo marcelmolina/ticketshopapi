@@ -34,7 +34,7 @@ class Cupon extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'status' => 'bool',
+		'status' => 'int',
 		'monto' => 'float',
 		'porcentaje_descuento' => 'float',
 		'id_tipo_cupon' => 'int',

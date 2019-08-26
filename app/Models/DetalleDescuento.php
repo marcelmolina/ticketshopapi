@@ -45,7 +45,7 @@ class DetalleDescuento extends Eloquent
 		'id_palco_evento' => 'int',
 		'porcentaje' => 'float',
 		'monto' => 'float',
-		'status' => 'float'
+		'status' => 'int'
 	];
 
 	protected $fillable = [

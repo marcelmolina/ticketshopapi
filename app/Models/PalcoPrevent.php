@@ -37,7 +37,8 @@ class PalcoPrevent extends Eloquent
 		'id_preventa' => 'int',
 		'precio_venta' => 'float',
 		'precio_servicio' => 'float',
-		'impuesto' => 'float'
+		'impuesto' => 'float',
+		'status' => 'int'
 	];
 
 	protected $fillable = [

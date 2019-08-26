@@ -12,6 +12,24 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+	Route::post('login', 'UsuarioController@login');
+	Route::post('register', 'UsuarioController@register');
+	
+	Route::get('validateToken', 'UsuarioController@validateToken');
+
+	Route::get('auth/signup/activate/{token}', 'UsuarioController@signupActivate');
+
+	Route::get('auth/{provider}', 'UsuarioController@redirectToProvider');
+	Route::get('auth/{provider}/callback', 'UsuarioController@handleProviderCallback');
+
+	Route::post('creatreset', 'PasswordResetController@creatreset');
+	Route::get('password/find/{token}', 'PasswordResetController@find');
+	Route::post('reset', 'PasswordResetController@reset');
+
+
+Route::group(['middleware' => 'auth:api'], function () {
+
 	Route::apiResource('condicion','CondicionController');
 	Route::get('buscarCondicion','CondicionController@buscarCondicion');
 	Route::get('condiciones_all','CondicionController@condiciones_all');
@@ -53,6 +71,7 @@ use Illuminate\Http\Request;
   	Route::get('generos_all','GeneroController@generos_all');
 	
 	Route::apiResource('artista','ArtistController');
+	Route::post('updateArtist','ArtistController@updateArtist');
 	Route::get('buscarArtistas','ArtistController@buscarArtistas');
 	Route::get('artistas_all','ArtistController@artistas_all');
 	Route::get('listado_detalle_artistas','ArtistController@listado_detalle_artistas');
@@ -94,13 +113,15 @@ use Illuminate\Http\Request;
 
 	Route::apiResource('pais','PaisController');
 	Route::get('buscarPais','PaisController@buscarPais');
-	Route::get('pais_all','pais_all@buscarPais');
+	Route::get('pais_all','PaisController@pais_all');
 
 	Route::apiResource('departamento','DepartamentoController');
+	Route::get('departamentos_pais','DepartamentoController@departamentos_pais');
 	Route::get('buscarDepartamento','DepartamentoController@buscarDepartamento');
 	Route::get('departamento_all','DepartamentoController@departamento_all');
 
 	Route::apiResource('ciudad','CiudadController');
+	Route::get('ciudades_departamento','CiudadController@ciudades_departamento');
 	Route::get('buscarCiudad','CiudadController@buscarCiudad');
 	Route::get('ciudades_all','CiudadController@ciudades_all');	
 
@@ -163,27 +184,14 @@ use Illuminate\Http\Request;
 	Route::get('temporadascompradas/{temporadascompradas}', 'UsuarioController@temporadascompradas');
 	Route::get('reservas/{reservas}', 'UsuarioController@reservas');
 
-	Route::post('login', 'UsuarioController@login');
-	Route::post('register', 'UsuarioController@register');
+
+	Route::post('cambioclave', 'UsuarioController@cambioclave');
+	Route::post('detailsuser', 'UsuarioController@detailsuser');
+	Route::put('updateprofile/{updateprofile}', 'UsuarioController@updateprofile');	
+	Route::post('logout', 'UsuarioController@logout');
 	Route::delete('destroy/{usuario}', 'UsuarioController@destroy');
 
-	Route::get('validateToken', 'UsuarioController@validateToken');
-
-	Route::get('auth/signup/activate/{token}', 'UsuarioController@signupActivate');
-
-	Route::get('auth/{provider}', 'UsuarioController@redirectToProvider');
-	Route::get('auth/{provider}/callback', 'UsuarioController@handleProviderCallback');
-
-	Route::post('creatreset', 'PasswordResetController@creatreset');
-	Route::get('password/find/{token}', 'PasswordResetController@find');
-	Route::post('reset', 'PasswordResetController@reset');
-
-	Route::group(['middleware' => 'auth:api'], function () { 
-		Route::post('cambioclave', 'UsuarioController@cambioclave');
-		Route::post('detailsuser', 'UsuarioController@detailsuser');
-		Route::put('updateprofile/{updateprofile}', 'UsuarioController@updateprofile');	
-		Route::post('logout', 'UsuarioController@logout');
-	});
+});
 
 
 

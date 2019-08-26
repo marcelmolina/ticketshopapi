@@ -36,7 +36,7 @@ class DetalleVentaTemporada extends Eloquent
 		'id_evento' => 'int',
 		'id_boleta_evento' => 'int',
 		'id_palco_evento' => 'int',
-		'status' => 'bool'
+		'status' => 'int'
 	];
 
 	protected $fillable = [
