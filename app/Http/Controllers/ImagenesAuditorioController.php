@@ -14,6 +14,12 @@ use Validator;
  */
 class ImagenesAuditorioController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Listado de las imagenes por auditorios.
      *
@@ -30,10 +36,12 @@ class ImagenesAuditorioController extends BaseController
      /**
      * Agrega un nuevo elemento a la tabla imagenes_auditorio 
      *@bodyParam id_imagen int required Id de la imagen.
-     *@bodyParam id_auditorio int required Id del auditorio. 
+     *@bodyParam id_auditorio int required Id del auditorio.
+     *@bodyParam imagen_mapeada string Mapeo de la imagen principal. 
      * @response {
      *  "id_imagen": 1,
-     *  "id_auditorio": 2,      
+     *  "id_auditorio": 2,
+     *  "imagen_mapeada": null,      
      * }  
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -42,7 +50,8 @@ class ImagenesAuditorioController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'id_imagen' => 'required|integer',
-            'id_auditorio' => 'required|integer',            
+            'id_auditorio' => 'required|integer', 
+            'imagen_mapeada' => 'nullable|string'           
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -92,12 +101,14 @@ class ImagenesAuditorioController extends BaseController
      * [Se filtra por el ID del auditorio]
      *@bodyParam id_imagen_old int required Id de la imagen (La cual se quiere editar).
      *@bodyParam id_imagen_new int required Id de la imagen (Id nuevo de la imagen).
+     *@bodyParam imagen_mapeada string Mapeo de la imagen principal.
      * @response {
      *  "id_imagen_old": 1,
-     *  "id_imagen_new": 2,      
+     *  "id_imagen_new": 2, 
+     *  "imagen_mapeada": null,     
      * }
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Auditorio  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -105,7 +116,8 @@ class ImagenesAuditorioController extends BaseController
         $input = $request->all();
         $validator = Validator::make($input, [            
             'id_imagen_old' => 'required|integer',
-            'id_imagen_new' => 'required|integer',     
+            'id_imagen_new' => 'required|integer',
+            'imagen_mapeada' => 'nullable|string'      
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());      
@@ -136,7 +148,7 @@ class ImagenesAuditorioController extends BaseController
 
         ImagenesAuditorio::where('id_auditorio','=',$id)
                             ->where('id_imagen','=', $input['id_imagen_old'])
-                            ->update(['id_imagen' => $input['id_imagen_new']]);  
+                            ->update(['id_imagen' => $input['id_imagen_new'], 'imagen_mapeada' => $input['imagen_mapeada']]);  
         
         $imagen_auditorio = ImagenesAuditorioController::img_auditorio_search($id, $input['id_imagen_new']);
                             
@@ -149,7 +161,7 @@ class ImagenesAuditorioController extends BaseController
      *
      * [Se filtra por el ID del auditorio]
      *
-     * @param  int  $id
+     * @param  \App\Models\Auditorio   $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

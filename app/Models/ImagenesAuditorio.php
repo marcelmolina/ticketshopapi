@@ -33,7 +33,8 @@ class ImagenesAuditorio extends Eloquent
 
 	protected $fillable = [
 		'id_imagen',
-		'id_auditorio'
+		'id_auditorio',
+		'imagen_mapeada'
 	];
 
 	public function imagen()

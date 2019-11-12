@@ -14,6 +14,11 @@ use Validator;
  */
 class CondicionController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
     /**
      * Lista de la tabla condiciones paginadas.
      *

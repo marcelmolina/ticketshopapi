@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Input;
  */
 class GrupoVendedoresPtoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Listado de los grupo de vendedores por punto de venta
      *

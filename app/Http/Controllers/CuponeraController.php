@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Input;
  */
 class CuponeraController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla cuponera paginadas.
      *

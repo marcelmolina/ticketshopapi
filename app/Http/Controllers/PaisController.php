@@ -15,6 +15,12 @@ use Validator;
  */
 class PaisController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla pais paginada.
      *
@@ -109,7 +115,7 @@ class PaisController extends BaseController
         if (is_null($pais)) {
             return $this->sendError('Pais no encontrado');
         }
-        return $this->sendResponse($localidad->toArray(), 'Pais devuelto con éxito');
+        return $this->sendResponse($pais->toArray(), 'Pais devuelto con éxito');
     }
 
 

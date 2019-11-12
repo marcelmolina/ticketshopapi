@@ -50,4 +50,9 @@ class Tribuna extends Eloquent
 	{
 		return $this->hasMany(\App\Models\Localidad::class, 'id_tribuna');
 	}
+
+	public function auditorios_mapeados()
+	{
+		return $this->belongsToMany(\App\Models\AuditorioMapeado::class, 'auditorio_mapeado_tribuna', 'id_tribuna', 'id_auditorio_mapeado');
+	}
 }

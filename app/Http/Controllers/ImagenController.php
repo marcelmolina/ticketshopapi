@@ -14,6 +14,13 @@ use Validator;
  */
 class ImagenController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'updateImage', 'destroy']]);        
+    }
+
+
     /**
      * Lista de la tabla imagen.
      *

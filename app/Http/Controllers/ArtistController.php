@@ -18,6 +18,12 @@ use Validator;
  */
 class ArtistController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'updateArtist', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla artista paginados.
      *
@@ -83,8 +89,7 @@ class ArtistController extends BaseController
     public function listado_detalle_artistas()
     {
         
-        $artist = Artist::with('imagens')->with('genero')->paginate(15);
-        $lista_artist = compact('artist');
+        $lista_artist = Artist::with('imagens')->with('genero')->get();
         return $this->sendResponse($lista_artist, 'Artistas devueltos con éxito');
     }
 

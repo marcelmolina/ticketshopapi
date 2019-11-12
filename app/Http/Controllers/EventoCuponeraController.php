@@ -15,6 +15,13 @@ use Validator;
  */
 class EventoCuponeraController extends BaseController
 {
+    
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Listado de los cupones por eventos.
      *

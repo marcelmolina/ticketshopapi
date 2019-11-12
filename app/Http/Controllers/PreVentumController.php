@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Preventum;
 use App\Models\Evento;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
 use Validator;
+
 /**
  * @group Administración de Preventa
  *
@@ -13,6 +15,13 @@ use Validator;
  */
 class PreVentumController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
+
     /**
      * Lista de la tabla preventa paginada.
      *
@@ -72,12 +81,14 @@ class PreVentumController extends BaseController
      *@bodyParam id_evento int required Id del evento.
      *@bodyParam fecha_inicio date Fecha de inicio.
      *@bodyParam fecha_fin date Fecha de finalización. 
+     *@bodyParam porcentaje_descuento float Porcentaje de descuento de la preventa. 
      *@bodyParam activo int required Estado de la preventa. Defaults 0
      * @response {
      *  "nombre": "Palco New",
      *  "id_evento": 1,
-     *  "fecha_inicio": null
-     *  "fecha_fin": null
+     *  "fecha_inicio": null,
+     *  "fecha_fin": null,
+     *  "porcentaje_descuento" : 10.00,
      *  "activo": 0           
      * }
      * @param  \Illuminate\Http\Request  $request
@@ -87,10 +98,11 @@ class PreVentumController extends BaseController
     {
         
         $validator = Validator::make($request->all(), [                        
-            'nombre' => 'required|max:200', 
-            'id_evento' =>  'required|integer', 
-            "fecha_inicio" =>'nullable|date|date_format:Y-m-d',
-            "fecha_fin" =>'nullable|date|date_format:Y-m-d', 
+            "nombre" => 'required|max:200', 
+            "id_evento" =>  'required|integer', 
+            "fecha_inicio" => 'nullable|date|date_format:Y-m-d',
+            "fecha_fin" => 'nullable|date|date_format:Y-m-d',
+            "porcentaje_descuento" => 'nullable', 
             "activo" => 'required|integer'          
         ]);
         if($validator->fails()){
@@ -104,6 +116,10 @@ class PreVentumController extends BaseController
 
         if(is_null($request->input('activo'))){
             Input::merge(['activo' => 0]);
+        }
+
+        if(is_null($request->input('porcentaje_descuento'))){
+            Input::merge(['porcentaje_descuento' => 0]);
         }
 
         $preventa = Preventum::create($request->all());        
@@ -160,12 +176,14 @@ class PreVentumController extends BaseController
      *@bodyParam id_evento int required Id del evento.
      *@bodyParam fecha_inicio date Fecha de inicio.
      *@bodyParam fecha_fin date Fecha de finalización. 
+     *@bodyParam porcentaje_descuento float Porcentaje de descuento de la preventa.
      *@bodyParam activo int required Estado de la preventa. Defaults 0
      * @response {
      *  "nombre": "Palco New",
      *  "id_evento": 3,
-     *  "fecha_inicio": "2019-05-12"
-     *  "fecha_fin": null
+     *  "fecha_inicio": "2019-05-12",
+     *  "fecha_fin": null,
+     *  "porcentaje_descuento" : 10.50,
      *  "activo": 1           
      * }
      * @param  \Illuminate\Http\Request  $request
@@ -180,6 +198,7 @@ class PreVentumController extends BaseController
             'id_evento' =>  'required|integer', 
             "fecha_inicio" =>'nullable|date|date_format:Y-m-d',
             "fecha_fin" =>'nullable|date|date_format:Y-m-d', 
+            "porcentaje_descuento" => 'nullable', 
             "activo" => 'required|integer'          
         ]);
         if($validator->fails()){
@@ -200,6 +219,12 @@ class PreVentumController extends BaseController
             $preventa_search->activo  = 0;
         }else{
             $preventa_search->activo  = $input['activo'];
+        } 
+
+        if(is_null($input['porcentaje_descuento'])){
+            $preventa_search->porcentaje_descuento  = 0;
+        }else{
+            $preventa_search->porcentaje_descuento  = $input['porcentaje_descuento'];
         } 
 
         $preventa_search->nombre = $input['nombre'];

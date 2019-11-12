@@ -17,6 +17,12 @@ use Validator;
  */
 class DescuentoEventoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
     /**
      * Listado de los descuentos por evento.
      *

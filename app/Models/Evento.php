@@ -22,6 +22,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property bool $tipo_evento
  * @property int $domicilios
  * @property int $venta_linea
+ * @property string $email_usuario
  * @property int $id_auditorio
  * @property int $id_cliente
  * @property int $id_temporada
@@ -30,8 +31,10 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property double $monto_minimo
  * 
  * @property \App\Models\Auditorio $auditorio
+ * @property \App\Models\Usuario $usuario
  * @property \App\Models\Cliente $cliente
  * @property \App\Models\Temporada $temporada
+ * @property \App\Models\AuditorioMapeado $auditorio_mapeado
  * @property \Illuminate\Database\Eloquent\Collection $artists
  * @property \Illuminate\Database\Eloquent\Collection $boleta_eventos
  * @property \Illuminate\Database\Eloquent\Collection $descuento_eventos
@@ -54,6 +57,7 @@ class Evento extends Eloquent
 		'domicilios' => 'int',
 		'venta_linea' => 'int',
 		'id_auditorio' => 'int',
+		'id_auditorio_mapeado' => 'int',
 		'id_cliente' => 'int',
 		'id_temporada' => 'int',
 		'status' => 'int',
@@ -61,8 +65,10 @@ class Evento extends Eloquent
 	];
 
 	protected $dates = [
-		'fecha_evento',		
-		'fecha_inicio_venta_internet'
+		'fecha_evento',
+		'fecha_finalizacion_evento',		
+		'fecha_inicio_venta_internet',
+		'fecha_inicio_venta_puntos',
 	];
 
 	protected $times = [		
@@ -73,15 +79,18 @@ class Evento extends Eloquent
 
 	protected $fillable = [
 		'fecha_evento',
+		'fecha_finalizacion_evento',
 		'nombre',
 		'hora_inicio',
 		'hora_apertura',
 		'hora_finalizacion',
 		'codigo_pulep',
 		'id_tipo_evento',
+		'email_usuario',
 		'domicilios',
 		'venta_linea',
 		'id_auditorio',
+		'id_auditorio_mapeado',
 		'id_cliente',
 		'id_temporada',
 		'status',
@@ -93,6 +102,16 @@ class Evento extends Eloquent
 	public function auditorio()
 	{
 		return $this->belongsTo(\App\Models\Auditorio::class, 'id_auditorio');
+	}
+
+	public function usuario()
+	{
+		return $this->belongsTo(\App\Models\Usuario::class, 'email_usuario');
+	}
+
+	public function auditorio_mapeado()
+	{
+		return $this->belongsTo(\App\Models\AuditorioMapeado::class, 'id_auditorio_mapeado');
 	}
 
 	public function tipoevento()

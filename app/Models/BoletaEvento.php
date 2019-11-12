@@ -20,6 +20,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $impuesto
  * @property int $status
  * @property string $codigo_moneda
+ * @property string $token_qr
  * 
  * @property \App\Models\Evento $evento
  * @property \App\Models\Puesto $puesto
@@ -53,7 +54,11 @@ class BoletaEvento extends Eloquent
 		'precio_servicio',
 		'impuesto',
 		'status',
-		'codigo_moneda'
+		'codigo_moneda'		
+	];
+
+	protected $hidden = [
+		'token_qr'
 	];
 
 	public function evento()

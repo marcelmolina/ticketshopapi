@@ -14,6 +14,13 @@ use Validator;
  */
 class ImagenEventoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
+
     /**
      * Listado de las imagenes por eventos.
      *
@@ -81,7 +88,8 @@ class ImagenEventoController extends BaseController
      */
     public function show($id)
     {
-        $img_evento = ImagenEvento::where('id_evento','=',$id)->get();
+        $img_evento = ImagenEvento::with('evento')
+                        ->with('imagen')->where('id_evento','=',$id)->get();
         if (count($img_evento) == 0) {
             return $this->sendError('Imagenes por evento no encontradas');
         }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Evento;
 use App\Models\Auditorio;
+use App\Models\AuditorioMapeado;
 use App\Models\Cliente;
 use App\Models\Temporada;
 use App\Models\TipoEvento;
 use Validator;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Auth;
 /**
  * @group Administración de Evento
  *
@@ -17,6 +19,12 @@ use Illuminate\Support\Facades\Input;
  */
 class EventoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy', 'eventos_usuario']]);        
+    }
+
     /**
      * Lista de la tabla evento paginados.
      *
@@ -25,9 +33,11 @@ class EventoController extends BaseController
     public function index()
     {
         $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
                     ->with('tipoevento')
-                    ->with('cliente')
-                    ->with('temporada')                    
+                    ->with('cliente')                    
+                    ->with('temporada')
+                    ->with('imagens')                    
                     ->paginate(15);
         return $this->sendResponse($evento->toArray(), 'Eventos devueltos con éxito');
     }
@@ -41,6 +51,7 @@ class EventoController extends BaseController
     public function evento_all()
     {
         $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
                     ->with('temporada')                    
@@ -66,6 +77,7 @@ class EventoController extends BaseController
             
             $input = $request->all();
             $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
                     ->with('temporada')
@@ -75,6 +87,7 @@ class EventoController extends BaseController
        }else{
             
             $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
                     ->with('temporada')
@@ -86,9 +99,65 @@ class EventoController extends BaseController
 
 
     /**
+     * Eventos por usuario logeado. 
+     * [Se buscan los eventos del usuario logeado actualmente]
+     * @return \Illuminate\Http\Response
+     */
+    public function eventos_usuario()
+    {
+       
+       $email = auth()->user()->email;
+       
+       if(isset($email) && $email != null){            
+            
+            $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
+                    ->with('tipoevento')
+                    ->with('cliente')
+                    ->with('imagens')
+                    ->with('temporada')
+                ->where('evento.email_usuario', $email)
+                ->get();
+            return $this->sendResponse($evento->toArray(), 'Eventos por usuario');
+       }
+       return $this->sendError('No se encuentra usuario logeado');
+        
+    }
+
+
+    /**
+     * Eventos clasificados por estado. 
+     * [Todos los eventos clasificados por estado]
+     *@bodyParam estado int Estado del evento.
+     *@response{
+     *    "estado" : "1",
+     * }
+     * @return \Illuminate\Http\Response
+     */
+    public function eventos_estado($estado)
+    {
+                       
+        $evento = Evento::with('auditorio')
+                ->with("auditorio_mapeado")
+                ->with('tipoevento')
+                ->with('cliente')
+                ->with('temporada')
+                ->with('imagens')
+                ->where('evento.status', $estado)
+                ->paginate(15);
+        if(count($evento) > 0){
+            return $this->sendResponse($evento->toArray(), 'Eventos por usuario');
+        }
+        return $this->sendError('No hay eventos con ese estado');
+        
+    }
+
+
+    /**
      * Agrega un nuevo elemento a la tabla evento
      *
      *@bodyParam fecha_evento date required Fecha del evento. Example: 2019-01-01
+     *@bodyParam fecha_finalizacion_evento date Fecha de finalización del evento. Example: 2019-01-02
      *@bodyParam nombre string required Nombre del evento.
      *@bodyParam hora_inicio time Hora de inicio del evento. Example: null
      *@bodyParam hora_apertura time Hora de apertura del evento. Example: null
@@ -98,14 +167,16 @@ class EventoController extends BaseController
      *@bodyParam domicilios int Domicilios del evento. Defaults to 0
      *@bodyParam venta_linea int Venta en linea del evento. Defaults to 1
      *@bodyParam id_auditorio int required Id del auditorio del evento.
+     *@bodyParam id_auditorio_mapeado int Id del auditorio mapeado del evento.
      *@bodyParam id_cliente int required Id del cliente del evento.
      *@bodyParam id_temporada int Id de la temporada del evento.
      *@bodyParam status int Status del evento.
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
-     *@bodyParam fecha_inicio_venta_puntos int required Cantidad de puntos de la ventas desde la fecha de inicio.
+     *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
      *@response{
      *       "fecha_evento" : "2019-01-01",
+     *       "fecha_finalizacion_evento" : "2019-01-02",
      *       "nombre" : "Evento WW",
      *       "hora_inicio": null,
      *       "hora_apertura": null,
@@ -115,11 +186,12 @@ class EventoController extends BaseController
      *       "domicilios": 0,
      *       "venta_linea" : 1,
      *       "id_auditorio": 2,
+     *       "id_auditorio_mapeado": 1,
      *       "id_cliente": 3,
      *       "id_temporada" : 1,
      *       "status": 0,
      *       "fecha_inicio_venta_internet": null,
-     *       "fecha_inicio_venta_puntos": 12,
+     *       "fecha_inicio_venta_puntos": null,
      *       "monto_minimo": 10.10,
      *     }
      *
@@ -130,10 +202,16 @@ class EventoController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'fecha_evento' => 'required|date',
+            'fecha_finalizacion_evento' => 'nullable|date|date_format:Y-m-d',
             'nombre' => 'required',
             'id_auditorio' => 'required',
+            'id_auditorio_mapeado' => 'nullable|integer',
             'id_cliente' => 'required',
-            'fecha_inicio_venta_puntos' => 'required|integer'      
+            'fecha_inicio_venta_puntos' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio' => 'nullable|date_format:H:i', 
+            'hora_apertura' => 'nullable|date_format:H:i', 
+            'hora_finalizacion' => 'nullable|date_format:H:i', 
+            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d'   
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -149,39 +227,10 @@ class EventoController extends BaseController
             return $this->sendError('Cliente indicado no encontrado');
         }
 
-        if(!is_null($request->input('hora_inicio'))){
-            $validator = Validator::make($request->all(), [
-                'hora_inicio' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
-        }
-
-        if(!is_null($request->input('hora_apertura'))){
-            $validator = Validator::make($request->all(), [
-                'hora_apertura' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
-        }
-
-        if(!is_null($request->input('hora_finalizacion'))){
-            $validator = Validator::make($request->all(), [
-                'hora_finalizacion' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
-        }
-
-        if(!is_null($request->input('fecha_inicio_venta_internet'))){
-            $validator = Validator::make($request->all(), [
-                'fecha_inicio_venta_internet' => 'date|date_format:Y-m-d',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
+        if(!is_null($request->input('id_auditorio_mapeado'))){
+            $auditorio_map = AuditorioMapeado::find($request->input('id_auditorio_mapeado'));
+            if (is_null($auditorio_map)) {
+                return $this->sendError('Mapeo de auditorio indicado no encontrado');
             }
         }
 
@@ -215,7 +264,10 @@ class EventoController extends BaseController
             Input::merge(['venta_linea' => 1]);
         }
 
-        $evento = Evento::create($request->all());        
+        $evento = Evento::create($request->all());   
+        $evento->email_usuario = auth()->user()->email;
+        $evento->save();
+
         return $this->sendResponse($evento->toArray(), 'Evento creado con éxito');
     }
 
@@ -229,7 +281,7 @@ class EventoController extends BaseController
      */
     public function show($id)
     {
-        $evento = Evento::with("auditorio")->with("tipoevento")->with("cliente")->with("temporada")->find($id);
+        $evento = Evento::with("auditorio")->with("auditorio_mapeado")->with("tipoevento")->with("cliente")->with("temporada")->find($id);
         if (is_null($evento)) {
             return $this->sendError('Evento no encontrado');
         }
@@ -241,6 +293,7 @@ class EventoController extends BaseController
      *
      * [Se filtra por el ID]
      *@bodyParam fecha_evento date required Fecha del evento. Example: 2019-01-01
+     *@bodyParam fecha_finalizacion_evento date Fecha de finalización del evento. Example: 2019-01-02
      *@bodyParam nombre string required Nombre del evento.
      *@bodyParam hora_inicio time Hora de inicio del evento. Example: null
      *@bodyParam hora_apertura time Hora de apertura del evento. Example: null
@@ -250,14 +303,16 @@ class EventoController extends BaseController
      *@bodyParam domicilios int Domicilios del evento. Defaults to 0
      *@bodyParam venta_linea int Venta en linea del evento. Defaults to 1
      *@bodyParam id_auditorio int required Id del auditorio del evento.
+     *@bodyParam id_auditorio_mapeado int Id del auditorio mapeado del evento.
      *@bodyParam id_cliente int required Id del cliente del evento.
      *@bodyParam id_temporada int Id de la temporada del evento.
      *@bodyParam status int Status del evento.
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
-     *@bodyParam fecha_inicio_venta_puntos int required Cantidad de puntos de la ventas desde la fecha de inicio.
+     *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
      *@response{
      *       "fecha_evento" : "2019-01-03",
+     *       "fecha_finalizacion_evento" : "2019-01-04",
      *       "nombre" : "Evento WW",
      *       "hora_inicio": null,
      *       "hora_apertura": null,
@@ -267,11 +322,12 @@ class EventoController extends BaseController
      *       "domicilios": 1,
      *       "venta_linea" : 1,
      *       "id_auditorio": 1,
+     *       "id_auditorio_mapeado": 2,
      *       "id_cliente": 3,
      *       "id_temporada" : null,
      *       "status": 1,
      *       "fecha_inicio_venta_internet": "2019-01-01",
-     *       "fecha_inicio_venta_puntos": 12,
+     *       "fecha_inicio_venta_puntos": "2019-01-04",
      *       "monto_minimo": 150.10
      *     }
      *
@@ -284,10 +340,16 @@ class EventoController extends BaseController
         $input = $request->all();
         $validator = Validator::make($input, [
             'fecha_evento' => 'required|date',
+            'fecha_finalizacion_evento' => 'nullable|date|date_format:Y-m-d',
             'nombre' => 'required',
             'id_auditorio' => 'required',
+            'id_auditorio_mapeado' => 'nullable|integer',
             'id_cliente' => 'required',
-            'fecha_inicio_venta_puntos' => 'required|integer'      
+            'fecha_inicio_venta_puntos' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio' => 'nullable|date_format:H:i', 
+            'hora_apertura' => 'nullable|date_format:H:i', 
+            'hora_finalizacion' => 'nullable|date_format:H:i', 
+            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d'      
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -308,43 +370,28 @@ class EventoController extends BaseController
             return $this->sendError('Cliente indicado no encontrado');
         }
 
-        if(!is_null($input['hora_inicio'])){
-            $validator = Validator::make($input, [
-                'hora_inicio' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
+        if(!is_null($input['hora_inicio'])){            
             $evento_search->hora_inicio = $input['hora_inicio'];
         }
-        if(!is_null($input['hora_apertura'])){
-            $validator = Validator::make($input, [
-                'hora_apertura' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
+
+        if(!is_null($input['hora_apertura'])){            
             $evento_search->hora_apertura = $input['hora_apertura'];
         }
 
-        if(!is_null($input['hora_finalizacion'])){
-            $validator = Validator::make($input, [
-                'hora_finalizacion' => 'date_format:H:i',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
+        if(!is_null($input['hora_finalizacion'])){            
             $evento_search->hora_finalizacion = $input['hora_finalizacion'];
         }
 
-        if(!is_null($input['fecha_inicio_venta_internet'])){
-            $validator = Validator::make($input, [
-                'fecha_inicio_venta_internet' => 'date|date_format:Y-m-d',      
-            ]);
-            if($validator->fails()){
-                return $this->sendError('Error de validación.', $validator->errors());       
-            }
+        if(!is_null($input['fecha_inicio_venta_internet'])){            
             $evento_search->fecha_inicio_venta_internet = $input['fecha_inicio_venta_internet'];
+        }
+
+        if(!is_null($input['fecha_inicio_venta_puntos'])){            
+            $evento_search->fecha_inicio_venta_puntos = $input['fecha_inicio_venta_puntos'];
+        }
+
+        if(!is_null($input['fecha_finalizacion_evento'])){
+            $evento_search->fecha_finalizacion_evento = $input['fecha_finalizacion_evento'];
         }
 
         if(!is_null($input['id_tipo_evento'])){            
@@ -357,6 +404,16 @@ class EventoController extends BaseController
             $evento_search->id_tipo_evento = null;
         }
 
+        if(!is_null($request->input('id_auditorio_mapeado'))){
+            $auditorio_map = AuditorioMapeado::find($request->input('id_auditorio_mapeado'));
+            if (is_null($auditorio_map)) {
+                return $this->sendError('Mapeo de auditorio indicado no encontrado');
+            }
+            $evento_search->id_auditorio_mapeado = $input['id_auditorio_mapeado'];
+        }else{
+            $evento_search->id_auditorio_mapeado = null;
+        }
+
         if(!is_null($input['id_temporada'])){            
             $temporada = Temporada::find($input['id_temporada']);
             if (is_null($temporada)) {
@@ -367,26 +424,33 @@ class EventoController extends BaseController
 
         if(is_null($input['status'])){
             $evento_search->status  = 0;
+        }else{
+            $evento_search->status = $input['status'];
         }
 
         if(is_null($input['monto_minimo'])){
            $evento_search->monto_minimo = 0.00;
+        }else{
+            $evento_search->monto_minimo = $input['monto_minimo'];
         }
 
         if(is_null($input['domicilios'])){
              $evento_search->domicilios = 0;
+        }else{
+            $evento_search->domicilios = $input['domicilios'];
         }
 
         if(is_null($input['venta_linea'])){
             $evento_search->venta_linea = 1;
+        }else{
+            $evento_search->venta_linea = $input['venta_linea'];
         }
 
         $evento_search->fecha_evento = $input['fecha_evento'];
         $evento_search->nombre = $input['nombre'];
         $evento_search->id_auditorio = $input['id_auditorio'];
-        $evento_search->id_cliente = $input['id_cliente'];
-        $evento_search->fecha_inicio_venta_puntos = $input['fecha_inicio_venta_puntos'];
-        $evento_search->status = $input['status'];
+        $evento_search->id_cliente = $input['id_cliente'];        
+        //$evento->email_usuario = auth()->user()->email;
         $evento_search->save();
         return $this->sendResponse($evento_search->toArray(), 'Evento actualizado con éxito');
 
@@ -430,25 +494,16 @@ class EventoController extends BaseController
             return $this->sendError('Tipo de evento no encontrado');
         }
 
-        $events = \DB::table('evento')
-                ->join('tipo_evento', 'evento.id_tipo_evento', '=', 'tipo_evento.id')
-                ->join('auditorio', 'evento.id_auditorio', '=', 'auditorio.id')
-                ->where('evento.id_tipo_evento','=', $id)
-                ->select('evento.id','evento.fecha_evento', 'evento.nombre','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.fecha_inicio_venta_internet','evento.monto_minimo', 'tipo_evento.id AS id_tipo_evento','tipo_evento.nombre AS tipo_evento', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio')
+        $evento = Evento::with('auditorio')
+                    ->with("auditorio_mapeado")
+                    ->with('tipoevento')
+                    ->with('cliente')
+                    ->with('temporada')
+                    ->with('imagens')
+                ->where('evento.id_tipo_evento', $id)
                 ->get();
-
-        $events_img = \DB::table('evento')
-                      ->join('imagen_evento', 'evento.id', '=', 'imagen_evento.id_evento')
-                      ->join('imagen', 'imagen_evento.id_imagen', '=', 'imagen.id')
-                      ->where('evento.id_tipo_evento','=', $id)
-                      ->select('imagen.nombre', 'imagen.url')
-                      ->get();
-
-
-        $events->first()->imagenes_evento = $events_img->toArray();
         
-        
-        return $this->sendResponse($events, 'Listado de evento por tipo devuelto con éxito');
+        return $this->sendResponse($evento->toArray(), 'Listado de evento por tipo devuelto con éxito');
     }
 
 
@@ -580,6 +635,7 @@ class EventoController extends BaseController
             
             $eventos = Evento::with('artists')
                         ->with('tipoevento')
+                        ->with('auditorio_mapeado')
                         ->with('palcos')
                         ->with('imagens')
                         ->where('evento.status',1)                         
@@ -617,8 +673,8 @@ class EventoController extends BaseController
                 ->join('temporada', 'evento.id_temporada', '=', 'temporada.id')
                 ->join('auditorio', 'evento.id_auditorio', '=', 'auditorio.id')                
                 ->join('clientes', 'evento.id_cliente', '=', 'clientes.id')
-                ->where('evento.id','=', $id)
-                ->select('evento.fecha_evento', 'evento.nombre','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.codigo_pulep','evento.domicilios','evento.venta_linea','evento.status','evento.fecha_inicio_venta_internet','evento.fecha_inicio_venta_puntos','tipo_evento.nombre AS tipo_evento', 'evento.monto_minimo','temporada.nombre AS nombre_temporada','temporada.status AS status_temporada', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio', 'auditorio.ciudad AS ciudad_auditorio', 'auditorio.departamento AS departamento_auditorio', 'auditorio.pais AS pais_auditorio', 'auditorio.direccion', 'auditorio.latitud', 'auditorio.longitud', 'auditorio.aforo', 'clientes.Identificacion AS identificacion_cliente', 'clientes.tipo_identificacion', 'clientes.nombrerazon', 'clientes.direccion AS direccion_cliente', 'clientes.ciudad AS ciudad_cliente', 'clientes.departamento AS departamento_cliente', 'clientes.email', 'clientes.telefono', 'clientes.tipo_cliente')
+                ->where('evento.id', $id)
+                ->select('evento.fecha_evento', 'evento.nombre','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.codigo_pulep','evento.domicilios','evento.venta_linea','evento.status','evento.fecha_inicio_venta_internet','evento.fecha_inicio_venta_puntos','tipo_evento.nombre AS tipo_evento', 'evento.monto_minimo','temporada.nombre AS nombre_temporada','temporada.status AS status_temporada', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio', 'auditorio.id_ciudad AS ciudad_auditorio', 'auditorio.id_departamento AS departamento_auditorio', 'auditorio.id_pais AS pais_auditorio', 'auditorio.direccion', 'auditorio.latitud', 'auditorio.longitud', 'auditorio.aforo', 'clientes.Identificacion AS identificacion_cliente', 'clientes.tipo_identificacion', 'clientes.nombrerazon', 'clientes.direccion AS direccion_cliente', 'clientes.id_ciudad AS ciudad_cliente', 'clientes.id_departamento AS departamento_cliente', 'clientes.email', 'clientes.telefono', 'clientes.tipo_cliente')
                 ->get();
 
         $preventas = \DB::table('evento')                

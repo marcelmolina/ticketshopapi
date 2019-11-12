@@ -13,6 +13,12 @@ use Validator;
  */
 class TipoEventoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla tipo evento paginada.
      *

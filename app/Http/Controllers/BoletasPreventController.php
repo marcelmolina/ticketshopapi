@@ -18,7 +18,14 @@ use Validator;
  */
 class BoletasPreventController extends BaseController
 {
-     /**
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
+
+    /**
      * Lista de la tabla boletas_prevent.
      *
      * @return \Illuminate\Http\Response

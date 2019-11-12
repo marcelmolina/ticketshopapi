@@ -16,6 +16,13 @@ use Validator;
  */
 class CostoEventoController extends BaseController
 {
+    
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
     /**
      * Lista de la tabla costo_evento.
      *
@@ -90,7 +97,7 @@ class CostoEventoController extends BaseController
      *
      * [Se filtra por el ID]
      *
-     * @param  \App\Models\CostoEvento  $costoEvento
+     * @param  \App\Models\CostoEvento  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -103,7 +110,29 @@ class CostoEventoController extends BaseController
         if (count($costo_evento) == 0) {
             return $this->sendError('El costo de evento no se encuentra');
         }
-        return $this->sendResponse($costo_evento->toArray(), 'Costo del evento devuelto con éxito');
+        return $this->sendResponse($costo_evento->toArray(), 'Costos del evento devuelto con éxito');
+    }
+
+
+    /**
+     * Costos de un evento en específico 
+     *
+     * [Se filtra por el ID del Evento]
+     *
+     * @param  \App\Models\CostoEvento  $id_evento
+     * @return \Illuminate\Http\Response
+     */
+    public function costos_evento($id_evento)
+    {
+        $costo_evento = CostoEvento::with("evento")
+                            ->with("tipo_costo")
+                            ->with("codigo_moneda")
+                            ->where('id_evento','=',$id_evento)
+                            ->get();
+        if (count($costo_evento) == 0) {
+            return $this->sendError('El costo de evento no se encuentra');
+        }
+        return $this->sendResponse($costo_evento->toArray(), 'Costos del evento devuelto con éxito');
     }
 
 

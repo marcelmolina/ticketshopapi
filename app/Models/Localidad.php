@@ -16,6 +16,8 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property string $nombre
  * @property int $id_tribuna
  * @property string $puerta_acceso
+ * @property string $ruta
+ * @property string $url_imagen
  * 
  * @property \App\Models\Tribuna $tribuna
  * @property \Illuminate\Database\Eloquent\Collection $detalle_descuentos
@@ -31,13 +33,19 @@ class Localidad extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'id_tribuna' => 'int'
+		'id_tribuna' => 'int',
+		'aforo' => 'int',
+		'silleteria' => 'boolean'
 	];
 
 	protected $fillable = [
 		'nombre',
 		'id_tribuna',
-		'puerta_acceso'
+		'puerta_acceso',
+		'ruta',
+		'url_imagen',
+		'silleteria',
+		'aforo'
 	];
 
 	public function tribuna()

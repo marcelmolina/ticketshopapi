@@ -15,6 +15,13 @@ use Carbon\Carbon;
  */
 class TasaController extends BaseController
 {
+    
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy', 'convertir']]);        
+    }
+
     /**
      * Lista de la tabla tasa paginada.
      *

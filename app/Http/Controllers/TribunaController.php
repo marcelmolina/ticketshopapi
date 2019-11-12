@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Input;
  */
 class TribunaController extends BaseController
 {
+     
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
      /**
      * Lista de la tabla tribuna paginada.
      *

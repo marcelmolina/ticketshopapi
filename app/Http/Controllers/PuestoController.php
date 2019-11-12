@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Puesto;
 use App\Models\Localidad;
+use App\Models\Auditorio;
 use App\Models\Fila;
 use Illuminate\Support\Facades\Input;
 use Validator;
@@ -15,6 +16,12 @@ use Validator;
  */
 class PuestoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla puesto paginada.
      *
@@ -81,6 +88,63 @@ class PuestoController extends BaseController
 
 
     /**
+     * Buscar Puestos por fila.
+     * [Se filtra por ID de la fila]
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function puestos_fila($id_fila)
+    {
+       
+        $fila = Fila::find($id_fila);
+
+        if (!$fila) {
+            return $this->sendError('Fila no encontrada');
+        }       
+            
+        $puesto = Puesto::with('localidad')
+            ->with('fila')
+            ->where('id_fila', $id_fila)
+            ->get();
+        return $this->sendResponse($puesto->toArray(), 'Todos los Puestos filtrados por fila');
+        
+    }
+
+
+    /**
+     * Todos los Puestos por auditorio.
+     * [Se filtra por ID del auditorio]
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function puestos_auditorio($id_auditorio)
+    {
+
+
+        $auditorio = Auditorio::find($id_auditorio);
+
+        if (is_null($auditorio)) {
+            return $this->sendError('Auditorio no encontrado');
+        }
+
+       $puestos = Puesto::wherehas('localidad.tribuna',function($query) use($id_auditorio){
+                            $query->where('id_auditorio', $id_auditorio);
+                        })
+                    ->with(['localidad.tribuna' => function($query) use($id_auditorio){
+                            $query->where('id_auditorio', $id_auditorio);
+                        }])
+                ->get();
+
+        if(is_null($puestos) || sizeof($puestos) == 0){
+            return $this->sendError('No hay puestos registrados para el auditorio');
+        }              
+            
+        return $this->sendResponse($puestos->toArray(), 'Todos los Puestos filtrados por auditorio');
+        
+    }
+
+
+    /**
      * Agrega un nuevo elemento a la tabla puesto
      *@bodyParam numero string Numero del puesto.
      *@bodyParam id_localidad int required Id de la localidad.
@@ -119,6 +183,37 @@ class PuestoController extends BaseController
 
         $puesto = Puesto::create($request->all());        
         return $this->sendResponse($puesto->toArray(), 'Puesto creado con éxito');
+    }
+
+
+    /**
+     * Agrega un nuevo elemento a la tabla puesto
+     *@bodyParam numeros array-string cantidad de puestos por fila.
+     *@bodyParam id_localidad int required Id de la localidad.
+     *@bodyParam id_fila int Id de la fila.
+     * @response {
+     *  "numeros": ["AA1"],
+     *  "id_localidad":1,
+     *  "id_fila": 1
+     * }
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function storexfila(Request $request)
+    {
+        if (count($request->numeros)>0) {
+            foreach ($request->numeros as $numero) {
+                $this->store(
+                    new Request([
+                        'numero'       => $numero,
+                        'id_localidad' => $request->id_localidad,
+                        'id_fila'      => $request->id_fila
+                    ])
+                );
+            }
+        } else {
+            $this->store($request);
+        }
     }
 
     /**

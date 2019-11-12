@@ -16,6 +16,12 @@ use Validator;
  */
 class PalcoEventoController extends BaseController
 {
+    
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);        
+    }
+
     /**
      * Lista de la tabla palco_evento.
      *
@@ -81,6 +87,7 @@ class PalcoEventoController extends BaseController
             return $this->sendError('El palco indicado no existe');
         }
 
+
         if(is_null($request->input('impuesto'))){
             Input::merge(['impuesto' => 0]);
         }
@@ -89,8 +96,14 @@ class PalcoEventoController extends BaseController
             Input::merge(['status' => 0]);
         }
 
-        $palco_evento = PalcoEvento::create($request->all());        
-        return $this->sendResponse($palco_evento->toArray(), 'Palco de evento creado con éxito');
+        $palco_evento = PalcoEvento::create($request->all());  
+        $token = md5(microtime());
+
+        $palco_ev = PalcoEvento::find($palco_evento->id);
+        $palco_ev->token_qr = $token;
+        $palco_ev->save();
+
+        return $this->sendResponse($palco_ev->toArray(), 'Palco de evento creado con éxito');
     }
 
     /**
@@ -120,8 +133,6 @@ class PalcoEventoController extends BaseController
      *
      * [Se filtra por el ID]
      *
-     *@bodyParam id_evento int required ID del evento.
-     *@bodyParam id_palco int required ID del puesto.
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
      *@bodyParam impuesto float Impuesto de la boleta.
@@ -129,8 +140,6 @@ class PalcoEventoController extends BaseController
      *@bodyParam codigo_moneda string required Codigo de la moneda.     
      *
      *@response{
-     *       "id_evento" : 3,
-     *       "id_palco" : 2,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
      *       "impuesto" : 0,
@@ -146,8 +155,8 @@ class PalcoEventoController extends BaseController
     {
         $input = $request->all();
         $validator = Validator::make($input, [
-            'id_evento'=> 'required|integer',
-            'id_palco' => 'required|integer',
+            // 'id_evento'=> 'required|integer',
+            // 'id_palco' => 'required|integer',
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
@@ -190,8 +199,8 @@ class PalcoEventoController extends BaseController
             $palco_evento_search->status  = $input['status'];
         }
         $palco_evento_search->codigo_moneda  = $input['codigo_moneda'];
-        $palco_evento_search->id_evento = $input['id_evento'];
-        $palco_evento_search->id_puesto = $input['id_puesto'];
+        // $palco_evento_search->id_evento = $input['id_evento'];
+        // $palco_evento_search->id_puesto = $input['id_puesto'];
         $palco_evento_search->precio_venta = $input['precio_venta'];
         $palco_evento_search->precio_servicio = $input['precio_servicio'];
 

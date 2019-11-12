@@ -14,6 +14,13 @@ use Validator;
  */
 class CondicionesEventoController extends BaseController
 {
+    
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
     /**
      * Listado de las condiciones por eventos.
      *

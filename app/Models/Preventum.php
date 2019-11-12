@@ -45,6 +45,7 @@ class Preventum extends Eloquent
 	protected $fillable = [
 		'nombre',
 		'id_evento',
+		'porcentaje_descuento',
 		'fecha_inicio',
 		'fecha_fin',
 		'activo'

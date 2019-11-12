@@ -19,6 +19,13 @@ use Validator;
  */
 class DetalleDescuentoController extends BaseController
 {
+    
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+    }
+
     /**
      * Lista de la tabla detalle_descuento.
      *

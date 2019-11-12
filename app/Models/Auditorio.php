@@ -21,6 +21,8 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property float $latitud
  * @property float $longitud
  * @property int $aforo
+ * @property string $url_imagen
+ * @property string $codigo_mapeado
  * 
  * @property \Illuminate\Database\Eloquent\Collection $eventos
  * @property \Illuminate\Database\Eloquent\Collection $ciudad
@@ -50,7 +52,9 @@ class Auditorio extends Eloquent
 		'direccion',
 		'latitud',
 		'longitud',
-		'aforo'
+		'aforo',
+		'url_imagen',
+		'codigo_mapeado'
 	];
 
 	public function eventos()
