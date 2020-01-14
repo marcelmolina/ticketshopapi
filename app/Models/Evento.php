@@ -74,13 +74,16 @@ class Evento extends Eloquent
 	protected $times = [		
 		'hora_inicio',
 		'hora_apertura',
-		'hora_finalizacion'		
+		'hora_finalizacion',
+		'hora_inicio_venta_internet',
+		'hora_inicio_venta_puntos',	
 	];
 
 	protected $fillable = [
 		'fecha_evento',
 		'fecha_finalizacion_evento',
 		'nombre',
+		'descripcion',
 		'hora_inicio',
 		'hora_apertura',
 		'hora_finalizacion',
@@ -95,8 +98,11 @@ class Evento extends Eloquent
 		'id_temporada',
 		'status',
 		'fecha_inicio_venta_internet',
+		'hora_inicio_venta_internet',
 		'fecha_inicio_venta_puntos',
-		'monto_minimo'
+		'hora_inicio_venta_puntos',
+		'monto_minimo',
+		'cant_max_boletas'
 	];
 
 	public function auditorio()
@@ -175,3 +181,4 @@ class Evento extends Eloquent
 		return $this->hasMany(\App\Models\PuntoventaEvento::class, 'id_evento');
 	}
 }
+

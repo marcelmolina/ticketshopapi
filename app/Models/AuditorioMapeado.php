@@ -34,7 +34,9 @@ class AuditorioMapeado extends Eloquent
 	protected $fillable = [		
 		'id_auditorio',
 		'area_mapeada',
-		'imagen'
+		'nombre',
+		'imagen',
+		'status'
 	];	
 
 	public function auditorio()
@@ -52,3 +54,4 @@ class AuditorioMapeado extends Eloquent
 		return $this->belongsToMany(\App\Models\Tribuna::class, 'auditorio_mapeado_tribuna', 'id_auditorio_mapeado', 'id_tribuna');
 	}
 }
+

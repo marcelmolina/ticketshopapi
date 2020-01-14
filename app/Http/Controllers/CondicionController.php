@@ -26,7 +26,7 @@ class CondicionController extends BaseController
      */
     public function index()
     {
-        $condiciones = Condicion::paginate(15);
+        $condiciones = Condicion::orderBy('descripcion')->paginate(15);
 
         return $this->sendResponse($condiciones->toArray(), 'Condiciones devueltas con éxito');
     }
@@ -39,7 +39,7 @@ class CondicionController extends BaseController
      */
     public function condiciones_all()
     {
-        $condiciones = Condicion::get();
+        $condiciones = Condicion::orderBy('descripcion')->get();
 
         return $this->sendResponse($condiciones->toArray(), 'Condiciones devueltas con éxito');
     }
@@ -61,11 +61,12 @@ class CondicionController extends BaseController
             
             $input = $request->all();
             $condiciones = Condicion::where('descripcion','like', '%'.strtolower($input["nombre"]).'%')
+                ->orderBy('descripcion')
                 ->get();
             return $this->sendResponse($condiciones->toArray(), 'Todas las condiciones filtradas');
        }else{
             
-            $condiciones = Condicion::get();
+            $condiciones = Condicion::orderBy('descripcion')->get();
             return $this->sendResponse($condiciones->toArray(), 'Todas las condiciones devueltas'); 
        }
 
@@ -172,3 +173,4 @@ class CondicionController extends BaseController
         }
     }
 }
+

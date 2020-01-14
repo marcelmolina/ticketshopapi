@@ -6,6 +6,7 @@ use App\Models\Localidad;
 use App\Models\Tribuna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Storage;
 use Validator;
 /**
  * @group Administración de Localidad
@@ -79,13 +80,25 @@ class LocalidadController extends BaseController
         
     }
 
+
+    public function getB64Image($base64_image){  
+        $image_service_str = substr($base64_image, strpos($base64_image, ",")+1);
+        $image = base64_decode($image_service_str);   
+        return $image; 
+    }
+
+    public function getB64Extension($base64_image, $full=null){  
+        preg_match("/^data:image\/(.*);base64/i",$base64_image, $img_extension);   
+        return ($full) ?  $img_extension[0] : $img_extension[1];  
+    }
+
     /**
      * Agrega un nuevo elemento a la tabla localidad
      *@bodyParam nombre string required Nombre de la localidad.
      *@bodyParam id_tribuna int required Id de la tribuna.
      *@bodyParam puerta_acceso string Puerta de acceso de la loccalidad. Defaults to 0
      *@bodyParam ruta string Ruta de la localidad.
-     *@bodyParam url_imagen string Url de la imagen.
+     *@bodyParam imagen string Imagen en formato base64.
      *@bodyParam aforo int Capacidad total de las localidades de un evento.
      *@bodyParam silleteria boolean
      * @response {
@@ -93,7 +106,7 @@ class LocalidadController extends BaseController
      *  "id_tribuna": 1, 
      *  "puerta_acceso":null,
      *  "ruta":null,
-     *  "url_imagen": null,
+     *  "imagen": null,
      *  "aforo": 1,
      *  "silleteria": true     
      * }
@@ -108,9 +121,11 @@ class LocalidadController extends BaseController
             'id_tribuna' => 'required',
             'puerta_acceso' => 'alpha_num|max:20',
             'ruta' => 'nullable|string',
-            'url_imagen' => 'nullable|string',
+            'imagen' => 'nullable|string',
             'aforo' => 'nullable|int',
-            'silleteria' => 'nullable|boolean'
+            'palco' => 'nullable|boolean',
+            'silleteria' => 'nullable|boolean',
+            'puestosxpalco' => 'nullable|int',
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -121,7 +136,33 @@ class LocalidadController extends BaseController
             return $this->sendError('La Tribuna indicada no existe');
         }
 
-        $localidad = Localidad::create($request->all());        
+        $urlFile = null;
+        if($request->input('imagen') != null || $request->input('imagen') != ""){
+
+            $img = $this->getB64Image($request->input('imagen'));  
+
+            $img_extension = $this->getB64Extension($request->input('imagen'));        
+            $img_name = 'image_base64'. time() . '.' . $img_extension; 
+            $path = public_path() . "/storage/imagenes/" . $img_name;
+            file_put_contents($path, $img);
+            $urlFile = env('APP_URL').'storage/imagenes/'. $img_name;
+
+        }
+
+
+        $localidad = new Localidad();
+        $localidad->nombre = $request->input('nombre');
+        $localidad->id_tribuna = $request->input('id_tribuna');
+        $localidad->puerta_acceso = $request->input('puerta_acceso');
+        $localidad->ruta = $request->input('ruta');
+        $localidad->url_imagen = $urlFile;
+        $localidad->silleteria = $request->input('silleteria');
+        $localidad->palco = $request->input('palco');
+        $localidad->aforo = $request->input('aforo'); 
+        $localidad->puestosxpalco = $request->input('puestosxpalco'); 
+
+        $localidad->save();
+        
         return $this->sendResponse($localidad->toArray(), 'Localidad creada con éxito');
     }
 
@@ -147,7 +188,8 @@ class LocalidadController extends BaseController
         return $this->sendResponse($localidad->toArray(), 'Localidad devuelta con éxito');
     }
 
-     /**
+
+    /**
      * Actualiza un elemeto de la tabla localidad 
      * [Se filtra por el ID de la localidad]
      *
@@ -157,8 +199,7 @@ class LocalidadController extends BaseController
      *@bodyParam ruta string Ruta de la localidad.
      *@bodyParam url_imagen string Url de la imagen.
      *@bodyParam aforo int Capacidad total de las localidades de un evento.
-     *@bodyParam silleteria boolean
-     * 
+     *@bodyParam silleteria boolean.
      *
      * @response {
      *  "nombre": "Localidad 2",
@@ -183,7 +224,9 @@ class LocalidadController extends BaseController
             'ruta' => 'nullable|string',
             'url_imagen' => 'nullable|string',
             'aforo' => 'nullable|int',
-            'silleteria' => 'nullable|boolean'           
+            'silleteria' => 'nullable|boolean',
+            'palco' => 'nullable|boolean',
+            'puestosxpalco' => 'nullable|int',
         ]);
 
         if($validator->fails()){
@@ -205,7 +248,9 @@ class LocalidadController extends BaseController
         $localidad_search->ruta = $input['ruta'];  
         $localidad_search->url_imagen = $input['url_imagen'];
         $localidad_search->aforo = $input['aforo'];
-        $localidad_search->silleteria = $input['silleteria'];         
+        $localidad_search->silleteria = $input['silleteria'];  
+        $localidad_search->palco = $input['palco'];  
+        $localidad_search->puestosxpalco = $input['puestosxpalco'];         
         $localidad_search->save();
 
         return $this->sendResponse($localidad_search->toArray(), 'Localidad actualizada con éxito');
@@ -240,3 +285,4 @@ class LocalidadController extends BaseController
         
     }
 }
+

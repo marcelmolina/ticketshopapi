@@ -46,3 +46,4 @@ class AuditorioMapeadoTribuna extends Eloquent
 		return $this->belongsTo(\App\Models\Tribuna::class, 'id_tribuna');
 	}
 }
+

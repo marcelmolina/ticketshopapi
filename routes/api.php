@@ -69,14 +69,21 @@ use Illuminate\Http\Request;
 	
 	Route::apiResource('costoevento','CostoEventoController');
 	Route::get('costos_evento/{id_evento}','CostoEventoController@costos_evento');
-	
-	Route::apiResource('boletaevento','BoletaEventoController');
-	Route::get('listado_puestos_evento/{id}','BoletaEventoController@listado_puestos_evento');
-    Route::post('boletasxlocalidad','BoletaEventoController@storexlocalidad');
-    Route::get('listado_boletas_localidad/{id_localidad}/{id_evento}','BoletaEventoController@listado_boletas_localidad');
 
+	Route::apiResource('boletaevento','BoletaEventoController');
+	Route::put('boletaevento_status/{id}','BoletaEventoController@update_status');
+	Route::get('listado_puestos_evento/{id}','BoletaEventoController@listado_puestos_evento');
+	Route::get('listado_boletas_localidad/{id_localidad}/{id_evento}','BoletaEventoController@listado_boletas_localidad');
+	Route::post('boletasxlocalidad','BoletaEventoController@storexlocalidad');	
+	//Route::post('boletas_palcos_reservadas/{id_localidad}/{id_evento}','BoletaEventoController@boletas_palcos_reservadas');
+	Route::post('boletas_palcos_reservadas','BoletaEventoController@boletas_palcos_reservadas');
+	Route::post('precioPuestoEvento','BoletaEventoController@getPrecio');
 	
-	Route::apiResource('palcoevento','PalcoEventoController');
+	Route::apiResource('palcoevento','PalcoEventoController');	
+	Route::put('palcoevento_status/{id}','PalcoEventoController@update_status');	
+	Route::post('palcosxlocalidad','PalcoEventoController@storexlocalidad');
+	Route::get('listado_palcos_localidad/{id_localidad}','PalcoEventoController@listado_palcos_localidad');
+
 	Route::apiResource('palcoprevent','PalcoPreventController');
 	
 	Route::apiResource('tasa','TasaController');
@@ -103,6 +110,7 @@ use Illuminate\Http\Request;
 	
 	Route::apiResource('imagen','ImagenController');
 	Route::post('updateImage/{imagen}','ImagenController@updateImage');
+	Route::post('save_base64','ImagenController@save_base64');
 
 	Route::apiResource('auditorio','AuditorioController');
 	Route::get('buscarAuditorio','AuditorioController@buscarAuditorio');
@@ -115,11 +123,13 @@ use Illuminate\Http\Request;
 	Route::get('auditoriosmap_auditorio/{id_auditorio}','AuditorioMapeadoController@auditoriosmap_auditorio');
 	Route::get('auditorios_map_all','AuditorioMapeadoController@auditorios_map_all');
 	Route::get('localidades_auditorio_map/{id_auditorio_map}','AuditorioMapeadoController@localidades_auditorio_map');
+	Route::get('localidadesevento_auditorio_map/{id_evento}','AuditorioMapeadoController@localidadesevento_auditorio_map');
+
+	Route::apiResource('localidad_evento','LocalidadEventoController');
 
 
 	Route::apiResource('auditorio_map_tribuna','AuditorioMapeadoTribunaController');
 	Route::get('auditorios_map_tribuna_all','AuditorioMapeadoTribunaController@auditorios_map_tribuna_all');
-
 
 	Route::apiResource('imagenesauditorio','ImagenesAuditorioController');
 
@@ -194,12 +204,11 @@ use Illuminate\Http\Request;
     Route::get('filas_localidad/{id_localidad}','FilaController@filas_localidad');
 
 	Route::apiResource('puesto','PuestoController');
-    Route::post('puestosxfila','PuestoController@storexfila');
+	Route::post('puestosxfila','PuestoController@storexfila');
 	Route::get('buscarPuestos','PuestoController@buscarPuestos');
 	Route::get('puesto_all','PuestoController@puesto_all');
 	Route::get('puestos_fila/{id_fila}','PuestoController@puestos_fila');
 	Route::get('puestos_auditorio/{id_auditorio}','PuestoController@puestos_auditorio');
-
 	
 	Route::apiResource('localidad','LocalidadController');
 	Route::get('localidad_all','LocalidadController@localidad_all');	
@@ -212,23 +221,22 @@ use Illuminate\Http\Request;
 
 	Route::apiResource('grupsvendedore','GrupsVendedoreController');
 	Route::get('buscarGrupoVendedores','GrupsVendedoreController@buscarGrupoVendedores');
-	Route::get('groups_vendedores_all','GrupsVendedoreController@groups_vendedores_all')
-	;		
-
+	Route::get('groups_vendedores_all','GrupsVendedoreController@groups_vendedores_all');
 
 	Route::get('payment_confirm','PaymentController@payment_confirm');
-	Route::post('generarsha','PaymentController@generarsha');
 
+	Route::apiResource('venta','VentController');
+	Route::post('generarsha','VentController@generarsha');
+	Route::post('obtener_refventa','VentController@obtener_refventa');
 
-Route::group(['middleware' => 'auth:api' ], function () {
+	Route::apiResource('auditoria_evento','AuditoriaEventoController');
+
+	Route::group(['middleware' => 'auth:api' ], function () {
 	Route::post('cambioclave', 'UsuarioController@cambioclave');
 	Route::post('detailsuser', 'UsuarioController@detailsuser');
 	Route::put('updateprofile/{updateprofile}', 'UsuarioController@updateprofile');	
 	Route::post('logout', 'UsuarioController@logout');
 	Route::delete('destroy/{usuario}', 'UsuarioController@destroy');
-
-
-
 });
 
 

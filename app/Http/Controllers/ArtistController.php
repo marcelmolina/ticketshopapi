@@ -89,10 +89,12 @@ class ArtistController extends BaseController
     public function listado_detalle_artistas()
     {
         
-        $lista_artist = Artist::with('imagens')->with('genero')->get();
-        return $this->sendResponse($lista_artist, 'Artistas devueltos con éxito');
+        $lista_artist = Artist::with('imagens')->with('genero')->orderBy('nombre')->get();
+        return $this->sendResponse($lista_artist->toArray(), 'Artistas devueltos con éxito');
     }
 
+
+   
    /**
      * Agrega un nuevo elemento a la tabla artista
      *@bodyParam nombre string required El nombre del artista.

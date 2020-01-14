@@ -39,7 +39,7 @@ class GeneroController extends BaseController
     public function generos_all()
     {
         
-        $genero = Genero::get();
+        $genero = Genero::orderBy('nombre')->get();
         return $this->sendResponse($genero->toArray(), 'Géneros devueltos con éxito');
     }
 

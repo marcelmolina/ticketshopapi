@@ -51,7 +51,11 @@ class PuntoVentum extends Eloquent
 
 	public function ciudades()
 	{
-		return $this->belongsTo(\App\Models\Ciudad::class, 'id_ciudad');
+		return $this->belongsTo(\App\Models\Ciudad::class, 'id_ciudad')
+					->with(['departamento'=>function($query){
+			                            $query->orderBy('descripcion');
+			                        }])
+					->orderBy('descripcion');
 	}
 
 	public function boleta_reservas()

@@ -20,7 +20,7 @@ class PuestosPalcoEventoController extends BaseController
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);        
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
     }
 
 

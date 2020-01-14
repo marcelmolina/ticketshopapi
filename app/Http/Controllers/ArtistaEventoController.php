@@ -200,3 +200,4 @@ class ArtistaEventoController extends BaseController
         return $search;
     }
 }
+

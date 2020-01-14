@@ -20,7 +20,7 @@ class CostoEventoController extends BaseController
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);
     }
 
     /**
@@ -38,7 +38,7 @@ class CostoEventoController extends BaseController
     }
 
    
-     /**
+    /**
      * Agrega un nuevo elemento a la tabla costo_evento.
      *
      *@bodyParam id_evento int required ID del evento.
@@ -110,9 +110,8 @@ class CostoEventoController extends BaseController
         if (count($costo_evento) == 0) {
             return $this->sendError('El costo de evento no se encuentra');
         }
-        return $this->sendResponse($costo_evento->toArray(), 'Costos del evento devuelto con éxito');
+        return $this->sendResponse($costo_evento->toArray(), 'Costo del evento devuelto con éxito');
     }
-
 
     /**
      * Costos de un evento en específico 
@@ -134,7 +133,6 @@ class CostoEventoController extends BaseController
         }
         return $this->sendResponse($costo_evento->toArray(), 'Costos del evento devuelto con éxito');
     }
-
 
     /**
      * Actualiza un elemento a la tabla costo_evento.

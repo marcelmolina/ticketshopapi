@@ -44,11 +44,8 @@ class AuditorioController extends BaseController
      */
     public function auditorio_all()
     {
-        
-         $auditorio = Auditorio::with('pais')
-                     ->with('ciudad')
-                     ->with('departamento')
-                     ->get();
+       
+         $auditorio = Auditorio::with('pais')->with('ciudad')->with('departamento')->orderBy('nombre')->get();
 
          return $this->sendResponse($auditorio->toArray(), 'Auditorios devueltos con éxito');
     }
@@ -209,49 +206,25 @@ class AuditorioController extends BaseController
     public function localidades_auditorio($id)
     {
 
-        // $auditorio = Auditorio::find($id);
-        // if (!$auditorio) {
-        //     return $this->sendError('Auditorio no encontrado');
-        // }
-
-        // $auditorios = Tribuna::with('auditorio')
-        //               ->with('localidads')
-        //               ->where('id_auditorio', $id)
-        //               ->first();
-
-        // if (is_null($auditorios)) {
-        //     return $this->sendError('El auditorio no posee localidades');
-        // }
-
-        // $local_aud = array();
-        
-            
-        // array_push($local_aud, ["auditorio" => $auditorios['auditorio'], "localidades" => $auditorios['localidads']]);
-       
-
-        // return $this->sendResponse($local_aud, 'Localidades por auditorio devueltas con éxito');
-
         $auditorio = Auditorio::find($id);
         if (!$auditorio) {
             return $this->sendError('Auditorio no encontrado');
         }
-
+        
         $auditorios = Localidad::wherehas('tribuna')
-                      ->wherehas('tribuna.auditorio',function($query) use($id){
-                            $query->where('id','=',$id);
-                        })
-                      ->with(['tribuna.auditorio'=>function($query) use($id){
-                            $query->where('id','=',$id);
-                        }])
+                      ->wherehas('tribuna.auditorio',function($query) use($id){$query->where('id','=',$id);})
+                      ->with(['tribuna.auditorio'=>function($query) use($id){$query->where('id','=',$id);}])
                       ->get();
+
 
         if (sizeof($auditorios)=="") {
             return $this->sendError('El auditorio no posee localidades');
         }
 
         $local_aud = array();
-
+            
         array_push($local_aud, ["auditorio" => '', "localidades" => $auditorios]);
+       
 
         return $this->sendResponse($local_aud, 'Localidades por auditorio devueltas con éxito');
     }
@@ -291,8 +264,10 @@ class AuditorioController extends BaseController
      */
     public function update($id, Request $request)
     {
-        
-        $input = $request->all();
+        //
+         $input = $request->all();
+
+
         $validator = Validator::make($request->all(), [
             'nombre' => 'required',   
             'id_ciudad' => 'required|integer',
@@ -327,7 +302,7 @@ class AuditorioController extends BaseController
             return $this->sendError('La Ciudad indicada no existe');
         }
 
-        $auditorio = Auditorio::find($id);
+         $auditorio = Auditorio::find($id);
         if (is_null($auditorio)) {
             return $this->sendError('Auditorio no encontrado');
         }
@@ -378,3 +353,4 @@ class AuditorioController extends BaseController
         return $this->sendResponse($auditorio->toArray(), 'Auditorio eliminado con éxito');
     }
 }
+

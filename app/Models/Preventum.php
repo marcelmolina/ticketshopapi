@@ -15,6 +15,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property int $id
  * @property string $nombre
  * @property int $id_evento
+ * @property float $porcentaje_descuento
  * @property \Carbon\Carbon $fecha_inicio
  * @property \Carbon\Carbon $fecha_fin
  * @property int $activo
@@ -37,23 +38,39 @@ class Preventum extends Eloquent
 		'activo' => 'int'
 	];
 
-	protected $dates = [
-		'fecha_inicio',
-		'fecha_fin'
-	];
 
 	protected $fillable = [
 		'nombre',
 		'id_evento',
-		'porcentaje_descuento',
+		'id_tribuna',
+		'id_localidad',		
 		'fecha_inicio',
 		'fecha_fin',
-		'activo'
+		'hora_inicio',
+		'hora_fin',
+		'activo',
+		'tipo_descuento_precio',
+		'porcentaje_descuento_precio',
+		'descuento_fijo_precio',
+		'tipo_descuento_servicio',
+		'porcentaje_descuento_servicio',
+		'descuento_fijo_servicio',
+		
 	];
 
 	public function evento()
 	{
 		return $this->belongsTo(\App\Models\Evento::class, 'id_evento');
+	}
+	
+	public function tribuna()
+	{
+		return $this->belongsTo(\App\Models\Tribuna::class, 'id_tribuna');
+	}
+
+	public function localidad()
+	{
+		return $this->belongsTo(\App\Models\Localidad::class, 'id_localidad');
 	}
 
 	public function boleta_reservas()
@@ -81,3 +98,4 @@ class Preventum extends Eloquent
 		return $this->hasMany(\App\Models\PalcoReserva::class, 'id_preventa');
 	}
 }
+

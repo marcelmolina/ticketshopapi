@@ -40,7 +40,7 @@ class TipoEventoController extends BaseController
     public function tipo_evento_all()
     {
        
-        $tipoEventos = TipoEvento::get();
+        $tipoEventos = TipoEvento::orderBy('nombre')->get();
         return $this->sendResponse($tipoEventos->toArray(), 'Tipos de eventos devueltos con éxito');
     }
 

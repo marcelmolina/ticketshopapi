@@ -66,7 +66,7 @@ class PuntoventaEventoController extends BaseController
             return $this->sendError('El punto de venta indicado no existe');
         }
 
-        $ptoventa_event_search = $this->ptoventa_event_search($request->input('id_evento'), $request->input('id_puntoventa'));
+        $ptoventa_event_search = PuntoventaEventoController::ptoventa_event_search($request->input('id_evento'), $request->input('id_puntoventa'));
 
         if(count($ptoventa_event_search) != 0){
            return $this->sendError('Punto de venta por evento ya existe'); 

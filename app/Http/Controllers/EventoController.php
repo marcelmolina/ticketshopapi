@@ -159,6 +159,7 @@ class EventoController extends BaseController
      *@bodyParam fecha_evento date required Fecha del evento. Example: 2019-01-01
      *@bodyParam fecha_finalizacion_evento date Fecha de finalización del evento. Example: 2019-01-02
      *@bodyParam nombre string required Nombre del evento.
+     *@bodyParam descripcion string Descripcion del evento.
      *@bodyParam hora_inicio time Hora de inicio del evento. Example: null
      *@bodyParam hora_apertura time Hora de apertura del evento. Example: null
      *@bodyParam hora_finalizacion time Hora de finalizacion del evento. Example: null
@@ -174,10 +175,13 @@ class EventoController extends BaseController
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
      *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
+     *@bodyParam hora_inicio_venta_internet time Hora inicio de la venta por internet 
+     *@bodyParam hora_inicio_venta_puntos time Hora inicio de la venta de los puntos de venta 
      *@response{
      *       "fecha_evento" : "2019-01-01",
      *       "fecha_finalizacion_evento" : "2019-01-02",
      *       "nombre" : "Evento WW",
+     *       "descripcion" : null,
      *       "hora_inicio": null,
      *       "hora_apertura": null,
      *       "hora_finalizacion" : null,
@@ -193,6 +197,9 @@ class EventoController extends BaseController
      *       "fecha_inicio_venta_internet": null,
      *       "fecha_inicio_venta_puntos": null,
      *       "monto_minimo": 10.10,
+     *       "cant_max_boletas":10,
+     *       "hora_inicio_venta_internet":null,
+     *       "hora_inicio_venta_puntos":null
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -203,15 +210,19 @@ class EventoController extends BaseController
         $validator = Validator::make($request->all(), [
             'fecha_evento' => 'required|date',
             'fecha_finalizacion_evento' => 'nullable|date|date_format:Y-m-d',
-            'nombre' => 'required',
+            'nombre' => 'required|string',
+            'descripcion' => 'nullable|string',
             'id_auditorio' => 'required',
             'id_auditorio_mapeado' => 'nullable|integer',
             'id_cliente' => 'required',
             'fecha_inicio_venta_puntos' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio_venta_puntos' => 'nullable|date_format:H:i',
             'hora_inicio' => 'nullable|date_format:H:i', 
             'hora_apertura' => 'nullable|date_format:H:i', 
             'hora_finalizacion' => 'nullable|date_format:H:i', 
-            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d'   
+            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio_venta_internet' => 'nullable|date_format:H:i',
+            'cant_max_boletas' => 'nullable|integer',   
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -295,6 +306,7 @@ class EventoController extends BaseController
      *@bodyParam fecha_evento date required Fecha del evento. Example: 2019-01-01
      *@bodyParam fecha_finalizacion_evento date Fecha de finalización del evento. Example: 2019-01-02
      *@bodyParam nombre string required Nombre del evento.
+     *@bodyParam descripcion string Descripcion del evento.
      *@bodyParam hora_inicio time Hora de inicio del evento. Example: null
      *@bodyParam hora_apertura time Hora de apertura del evento. Example: null
      *@bodyParam hora_finalizacion time Hora de finalizacion del evento. Example: null
@@ -310,10 +322,14 @@ class EventoController extends BaseController
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
      *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
+     *@bodyParam cant_max_boletas dinteger Cantidad máxima de venta de boletas
+     *@bodyParam hora_inicio_venta_internet time Hora inicio de la venta por internet 
+     *@bodyParam hora_inicio_venta_puntos time Hora inicio de la venta de los puntos de venta
      *@response{
      *       "fecha_evento" : "2019-01-03",
      *       "fecha_finalizacion_evento" : "2019-01-04",
      *       "nombre" : "Evento WW",
+     *       "descripcion" : "Evento WWTC",
      *       "hora_inicio": null,
      *       "hora_apertura": null,
      *       "hora_finalizacion" : null,
@@ -328,7 +344,10 @@ class EventoController extends BaseController
      *       "status": 1,
      *       "fecha_inicio_venta_internet": "2019-01-01",
      *       "fecha_inicio_venta_puntos": "2019-01-04",
-     *       "monto_minimo": 150.10
+     *       "monto_minimo": 150.10,
+     *       "cant_max_boletas":10,
+     *       "hora_inicio_venta_internet":null,
+     *       "hora_inicio_venta_puntos":null
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -341,15 +360,19 @@ class EventoController extends BaseController
         $validator = Validator::make($input, [
             'fecha_evento' => 'required|date',
             'fecha_finalizacion_evento' => 'nullable|date|date_format:Y-m-d',
-            'nombre' => 'required',
+            'nombre' => 'required|string',
+            'descripcion' => 'nullable|string',
             'id_auditorio' => 'required',
             'id_auditorio_mapeado' => 'nullable|integer',
             'id_cliente' => 'required',
             'fecha_inicio_venta_puntos' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio_venta_puntos' => 'nullable|date_format:H:i',
             'hora_inicio' => 'nullable|date_format:H:i', 
             'hora_apertura' => 'nullable|date_format:H:i', 
             'hora_finalizacion' => 'nullable|date_format:H:i', 
-            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d'      
+            'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d',
+            'hora_inicio_venta_internet' => 'nullable|date_format:H:i',
+            'cant_max_boletas' => 'nullable|integer',      
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -445,12 +468,18 @@ class EventoController extends BaseController
         }else{
             $evento_search->venta_linea = $input['venta_linea'];
         }
-
+         $evento_search->descripcion = $input['descripcion'];
         $evento_search->fecha_evento = $input['fecha_evento'];
         $evento_search->nombre = $input['nombre'];
         $evento_search->id_auditorio = $input['id_auditorio'];
-        $evento_search->id_cliente = $input['id_cliente'];        
-        //$evento->email_usuario = auth()->user()->email;
+        $evento_search->id_cliente = $input['id_cliente'];       
+
+        if(is_null($input['cant_max_boletas'])){
+            $evento_search->cant_max_boletas = null;
+        }else{
+            $evento_search->cant_max_boletas = $input['cant_max_boletas'];
+        }
+
         $evento_search->save();
         return $this->sendResponse($evento_search->toArray(), 'Evento actualizado con éxito');
 
@@ -674,7 +703,7 @@ class EventoController extends BaseController
                 ->join('auditorio', 'evento.id_auditorio', '=', 'auditorio.id')                
                 ->join('clientes', 'evento.id_cliente', '=', 'clientes.id')
                 ->where('evento.id', $id)
-                ->select('evento.fecha_evento', 'evento.nombre','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.codigo_pulep','evento.domicilios','evento.venta_linea','evento.status','evento.fecha_inicio_venta_internet','evento.fecha_inicio_venta_puntos','tipo_evento.nombre AS tipo_evento', 'evento.monto_minimo','temporada.nombre AS nombre_temporada','temporada.status AS status_temporada', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio', 'auditorio.id_ciudad AS ciudad_auditorio', 'auditorio.id_departamento AS departamento_auditorio', 'auditorio.id_pais AS pais_auditorio', 'auditorio.direccion', 'auditorio.latitud', 'auditorio.longitud', 'auditorio.aforo', 'clientes.Identificacion AS identificacion_cliente', 'clientes.tipo_identificacion', 'clientes.nombrerazon', 'clientes.direccion AS direccion_cliente', 'clientes.id_ciudad AS ciudad_cliente', 'clientes.id_departamento AS departamento_cliente', 'clientes.email', 'clientes.telefono', 'clientes.tipo_cliente')
+                ->select('evento.fecha_evento', 'evento.nombre', 'evento.descripcion','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.codigo_pulep','evento.domicilios','evento.venta_linea','evento.status','evento.fecha_inicio_venta_internet','evento.fecha_inicio_venta_puntos','tipo_evento.nombre AS tipo_evento', 'evento.monto_minimo', 'evento.cant_max_boletas','temporada.nombre AS nombre_temporada','temporada.status AS status_temporada', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio', 'auditorio.id_ciudad AS ciudad_auditorio', 'auditorio.id_departamento AS departamento_auditorio', 'auditorio.id_pais AS pais_auditorio', 'auditorio.direccion', 'auditorio.latitud', 'auditorio.longitud', 'auditorio.aforo', 'clientes.Identificacion AS identificacion_cliente', 'clientes.tipo_identificacion', 'clientes.nombrerazon', 'clientes.direccion AS direccion_cliente', 'clientes.id_ciudad AS ciudad_cliente', 'clientes.id_departamento AS departamento_cliente', 'clientes.email', 'clientes.telefono', 'clientes.tipo_cliente')
                 ->get();
 
         $preventas = \DB::table('evento')                
@@ -744,5 +773,5 @@ class EventoController extends BaseController
             return response()->json(['error' => 'Ocurrio un error', 'exception' => $e->errorInfo], 400);
         }
         
-    }   
+    } 
 }

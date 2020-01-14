@@ -27,7 +27,7 @@ class PuntoVentumController extends BaseController
      */
     public function index()
     {
-        $punto_venta = PuntoVentum::with("ciudades")->paginate(15);
+        $punto_venta = PuntoVentum::with("ciudades")->orderBy('nombre_razon')->paginate(15);
         return $this->sendResponse($punto_venta->toArray(), 'Puntos de ventas devueltos con éxito');
     }
 
@@ -39,7 +39,7 @@ class PuntoVentumController extends BaseController
      */
     public function puntoventum_all()
     {
-        $punto_venta = PuntoVentum::with("ciudades")->get();
+        $punto_venta = PuntoVentum::with("ciudades")->orderBy('nombre_razon')->get();
         return $this->sendResponse($punto_venta->toArray(), 'Puntos de ventas devueltos con éxito');
     }
 
@@ -63,6 +63,7 @@ class PuntoVentumController extends BaseController
             $input = $request->all();
             $punto_venta = PuntoVentum::with("ciudades")
                 ->where('punto_venta.nombre_razon','like', '%'.strtolower($input["nombre"]).'%')
+                ->orderBy('nombre_razon')
                 ->get();
             return $this->sendResponse($punto_venta->toArray(), 'Todos los Punto de venta filtrados');
        }else{
@@ -237,3 +238,4 @@ class PuntoVentumController extends BaseController
         }
     }
 }
+

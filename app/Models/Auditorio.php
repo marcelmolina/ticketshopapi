@@ -87,3 +87,4 @@ class Auditorio extends Eloquent
 		return $this->hasMany(\App\Models\Tribuna::class, 'id_auditorio');
 	}
 }
+

@@ -51,4 +51,9 @@ class Palco extends Eloquent
 	{
 		return $this->belongsToMany(\App\Models\Puesto::class, 'puestos_palco', 'id_palco', 'id_puesto');
 	}
+
+	public function palco_eventos()
+	{
+		return $this->hasMany(\App\Models\PalcoEvento::class, 'id_palco');
+	}
 }

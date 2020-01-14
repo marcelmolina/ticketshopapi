@@ -54,3 +54,4 @@ class Fila extends Eloquent
 		return $this->hasMany(\App\Models\Puesto::class, 'id_fila');
 	}
 }
+

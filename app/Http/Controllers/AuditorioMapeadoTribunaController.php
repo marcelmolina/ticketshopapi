@@ -22,7 +22,7 @@ class AuditorioMapeadoTribunaController extends BaseController
     }
 
     /**
-     * Lista de la tabla auditorio_mapeado_tribuna paginado.
+     * Lista de la tabla auditorio_mapeado_tribuna paginada.
      *
      * @return \Illuminate\Http\Response
      */
@@ -35,7 +35,7 @@ class AuditorioMapeadoTribunaController extends BaseController
     }
 
     /**
-     * Lista de todos los auditorios mapeados paginados.
+     * Lista de todos los auditorios_mapeados_tribuna.
      *
      * @return \Illuminate\Http\Response
      */
@@ -207,3 +207,4 @@ class AuditorioMapeadoTribunaController extends BaseController
         return $search;
     }
 }
+

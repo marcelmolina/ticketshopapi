@@ -56,3 +56,4 @@ class Tribuna extends Eloquent
 		return $this->belongsToMany(\App\Models\AuditorioMapeado::class, 'auditorio_mapeado_tribuna', 'id_tribuna', 'id_auditorio_mapeado');
 	}
 }
+

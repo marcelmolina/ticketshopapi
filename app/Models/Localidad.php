@@ -35,7 +35,7 @@ class Localidad extends Eloquent
 	protected $casts = [
 		'id_tribuna' => 'int',
 		'aforo' => 'int',
-		'silleteria' => 'boolean'
+		'silleteria' => 'int'
 	];
 
 	protected $fillable = [
@@ -45,7 +45,9 @@ class Localidad extends Eloquent
 		'ruta',
 		'url_imagen',
 		'silleteria',
-		'aforo'
+		'aforo',
+		'palco',
+		'puestosxpalco',
 	];
 
 	public function tribuna()
@@ -72,4 +74,10 @@ class Localidad extends Eloquent
 	{
 		return $this->hasMany(\App\Models\Puesto::class, 'id_localidad');
 	}
+
+	public function localidad_evento()
+	{
+		return $this->hasMany(\App\Models\LocalidadEvento::class, 'id_localidad');
+	}
 }
+

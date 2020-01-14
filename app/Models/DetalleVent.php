@@ -48,6 +48,7 @@ class DetalleVent extends Eloquent
 		'impuesto' => 'float',
 		'status' => 'int',
 		'id_descuento' => 'int',
+		'monto_descuento' => 'float',
 		'monto_domicilio' => 'float'
 	];
 
@@ -60,6 +61,7 @@ class DetalleVent extends Eloquent
 		'impuesto',
 		'status',
 		'id_descuento',
+		'monto_descuento',
 		'monto_domicilio',
 		'codigo_moneda'
 	];

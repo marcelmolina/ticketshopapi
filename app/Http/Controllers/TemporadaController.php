@@ -39,7 +39,7 @@ class TemporadaController extends BaseController
     public function temporada_all()
     {
         //
-         $temporada = Temporada::get();
+         $temporada = Temporada::orderBy('nombre')->get();
         return $this->sendResponse($temporada->toArray(), 'Temporadas devueltas con éxito');
     }
 

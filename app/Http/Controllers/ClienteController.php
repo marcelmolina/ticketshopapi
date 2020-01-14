@@ -43,7 +43,7 @@ class ClienteController extends BaseController
      */
     public function clientes_all()
     {
-         $cliente = Cliente::with('pais')->with('ciudad')->with('departamento')->get();
+         $cliente = Cliente::with('pais')->with('ciudad')->with('departamento')->orderBy('nombrerazon')->get();
 
         return $this->sendResponse($cliente->toArray(), 'Clientes devueltos con éxito');
     }

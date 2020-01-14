@@ -11,10 +11,22 @@ use Reliese\Database\Eloquent\Model as Eloquent;
 
 /**
  * Class Pago
- * 
+ *
  * @property int $id
  * @property string $description
- * 
+ * @property string $order
+ * @property string $message
+ * @property date $time
+ * @property string $customer
+ * @property int $amount
+ * @property string $currency
+ * @property string $status
+ * @property string $authorization
+ * @property string $token
+ * @property string $brand
+ * @property string $country
+ * @property string $ip
+ * @property string $client
  * @property \Illuminate\Database\Eloquent\Collection $artists
  *
  * @package App\Models
@@ -48,5 +60,9 @@ class Pago extends Eloquent
 		'client'
 	];
 
-	
+	public function venta()
+	{
+		return $this->belongsTo(\App\Models\Vent::class, 'order', 'token_refventa');
+	}
 }
+

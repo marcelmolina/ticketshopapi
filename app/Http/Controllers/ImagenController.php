@@ -34,6 +34,67 @@ class ImagenController extends BaseController
     }
 
 
+    public function getB64Image($base64_image){  
+        $image_service_str = substr($base64_image, strpos($base64_image, ",")+1);
+        $image = base64_decode($image_service_str);   
+        return $image; 
+    }
+
+    public function getB64Extension($base64_image, $full=null){  
+        preg_match("/^data:image\/(.*);base64/i",$base64_image, $img_extension);   
+        return ($full) ?  $img_extension[0] : $img_extension[1];  
+    }
+
+
+    /**
+     * Guardar nueva imagen en base64
+     *@bodyParam imagen string required Imagen base64.
+     * @response {
+     *  "imagen": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR...",
+     * }     
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function save_base64(Request $request)
+    {
+        
+        $validator = Validator::make($request->all(), [
+            'imagen' => 'required',
+	    'nombre' => 'nullable|string'
+        ]);
+
+        if($validator->fails()){
+            return $this->sendError('Error de validación.', $validator->errors());       
+        }
+        
+        $input = $request->all();
+
+
+        
+        $imagen = new Imagen();
+        
+        $img = $this->getB64Image($input["imagen"]);  
+
+        $img_extension = $this->getB64Extension($input["imagen"]);   
+        if ($input["nombre"]) {
+            $img_name = $input["nombre"]. time() . '.' . $img_extension; 
+        }  else {   
+            $img_name = 'image_base64'. time() . '.' . $img_extension; 
+        }
+        $path = public_path() . "/storage/imagenes/" . $img_name;
+        file_put_contents($path, $img);
+
+      
+        $urlFile = env('APP_URL').'storage/imagenes/'. $img_name;
+
+        $imagen->url = $urlFile; 
+        $imagen->nombre = $img_name;
+        $imagen->save();
+        return $this->sendResponse($imagen->toArray(), 'Imagen creada con éxito');
+    }
+
+
+
     /**
      * Agrega un nuevo elemento a la tabla imagen
      * [Debe enviarse en el request un elemento tipo file que contenga como key="imagen" y el value="archivo tipo file"]

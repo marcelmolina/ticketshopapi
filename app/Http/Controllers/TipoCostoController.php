@@ -17,7 +17,7 @@ class TipoCostoController extends BaseController
     
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);
     }
 
 
@@ -40,7 +40,7 @@ class TipoCostoController extends BaseController
      */
     public function tipo_costo_all()
     {
-        $tipo_costo = TipoCosto::get();
+        $tipo_costo = TipoCosto::orderBy('descripcion')->get();
         return $this->sendResponse($tipo_costo->toArray(), 'Tipos de costo devueltos con éxito');
     }
     

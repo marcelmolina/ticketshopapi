@@ -50,8 +50,8 @@ class ImagenesAuditorioController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'id_imagen' => 'required|integer',
-            'id_auditorio' => 'required|integer', 
-            'imagen_mapeada' => 'nullable|string'           
+            'id_auditorio' => 'required|integer',
+            'imagen_mapeada' => 'nullable|string'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -104,8 +104,8 @@ class ImagenesAuditorioController extends BaseController
      *@bodyParam imagen_mapeada string Mapeo de la imagen principal.
      * @response {
      *  "id_imagen_old": 1,
-     *  "id_imagen_new": 2, 
-     *  "imagen_mapeada": null,     
+     *  "id_imagen_new": 2,
+     *  "imagen_mapeada": null
      * }
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Auditorio  $id
@@ -181,3 +181,4 @@ class ImagenesAuditorioController extends BaseController
         return $search;
     }
 }
+

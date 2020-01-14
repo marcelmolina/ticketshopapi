@@ -36,8 +36,7 @@ class Vent extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'id_punto_venta' => 'int',
-		'tipo_identidicacion' => 'bool'
+		'id_punto_venta' => 'int'
 	];
 
 	protected $dates = [
@@ -46,6 +45,7 @@ class Vent extends Eloquent
 
 	protected $fillable = [
 		'fecha',
+		'token_refventa',
 		'email_usuario',
 		'id_punto_venta',
 		'tipo_venta',
@@ -54,7 +54,8 @@ class Vent extends Eloquent
 		'direccion',
 		'telefono',
 		'email',
-		'tipo_identidicacion'
+		'tipo_identidicacion',
+		'active'
 	];
 
 	public function usuario()
@@ -67,8 +68,16 @@ class Vent extends Eloquent
 		return $this->belongsTo(\App\Models\PuntoVentum::class, 'id_punto_venta');
 	}
 
+	public function detalle_pago()
+	{
+		return $this->belongsTo(\App\Models\Pago::class, 'token_refventa', 'order');
+	}
+
 	public function detalle_vents()
 	{
 		return $this->hasMany(\App\Models\DetalleVent::class, 'id_venta');
 	}
+
+
 }
+

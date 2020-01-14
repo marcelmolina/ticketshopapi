@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\PalcoEvento;
+use App\Http\Controllers\LocalidadEventoController;
 use App\Models\Evento;
 use App\Models\Palco;
 use App\Models\Moneda;
+use App\Models\Localidad;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -19,7 +22,7 @@ class PalcoEventoController extends BaseController
     
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'edit', 'update', 'destroy']]);        
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy', 'storexlocalidad']]);        
     }
 
     /**
@@ -154,9 +157,7 @@ class PalcoEventoController extends BaseController
     public function update(Request $request, $id)
     {
         $input = $request->all();
-        $validator = Validator::make($input, [
-            // 'id_evento'=> 'required|integer',
-            // 'id_palco' => 'required|integer',
+        $validator = Validator::make($input, [           
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
@@ -166,16 +167,7 @@ class PalcoEventoController extends BaseController
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
         }
-
-        $evento = Evento::find($input['id_evento']);
-        if (is_null($evento)) {
-            return $this->sendError('El evento indicado no existe');
-        }
-
-        $palco = Palco::find($input['id_palco']);
-        if (is_null($palco)) {
-            return $this->sendError('El palco indicado no existe');
-        }
+        
 
         $moneda = Moneda::find($input['codigo_moneda']);
         if (is_null($moneda)) {
@@ -198,11 +190,43 @@ class PalcoEventoController extends BaseController
         }else{
             $palco_evento_search->status  = $input['status'];
         }
-        $palco_evento_search->codigo_moneda  = $input['codigo_moneda'];
-        // $palco_evento_search->id_evento = $input['id_evento'];
-        // $palco_evento_search->id_puesto = $input['id_puesto'];
+        $palco_evento_search->codigo_moneda  = $input['codigo_moneda'];        
         $palco_evento_search->precio_venta = $input['precio_venta'];
         $palco_evento_search->precio_servicio = $input['precio_servicio'];
+
+        $palco_evento_search->save();
+        return $this->sendResponse($palco_evento_search->toArray(), 'Palco del evento actualizado con éxito');
+    }
+    
+    
+
+
+    /**
+     * Actualiza el estado del palco_evento
+     *
+     * [Se filtra por el ID del PalcoEvento]
+     *
+     *@bodyParam status int required Estado.
+     *
+     * @param  \App\Models\PalcoEvento  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update_status(Request $request, $id)
+    {
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'status' => 'required|integer'             
+        ]);
+        if($validator->fails()){
+            return $this->sendError('Error de validación.', $validator->errors());       
+        }
+
+        $palco_evento_search = PalcoEvento::find($id);
+        if (is_null($palco_evento_search)) {
+            return $this->sendError('Palco de evento no encontrado');
+        }
+
+        $palco_evento_search->status  = $input['status'];
 
         $palco_evento_search->save();
         return $this->sendResponse($palco_evento_search->toArray(), 'Palco del evento actualizado con éxito');
@@ -230,4 +254,119 @@ class PalcoEventoController extends BaseController
             return response()->json(['error' => 'El palco de evento no se puede eliminar, es usado en otra tabla', 'exception' => $e->errorInfo], 400);
         }
     }
+
+
+
+    /**
+     * Store por localidad (PalcoEvento)
+     *
+     *@bodyParam id_localidad int required ID de la localidad.
+     *@bodyParam id_evento int required ID del evento.
+     *@bodyParam impuesto float Impuesto de la boleta.
+     *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
+     *@bodyParam precio_servicio float required Precio del servicio.
+     *@bodyParam codigo_moneda string Codigo de la moneda.  
+     *
+     *@response{
+     *       "id_localidad" : 2,
+     *       "id_evento" : 2,
+     *       "impuesto" : 0,
+     *       "precio_venta" : 0,
+     *       "precio_servicio" : 0,
+     *       "codigo_moneda" : "USD"               
+     * }
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+     public function storexlocalidad(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'id_localidad' => 'required|integer',
+            'id_evento'=> 'required|integer',
+            'precio_venta' => 'required',
+            'precio_servicio' => 'required',
+            'impuesto' => 'nullable',
+            'codigo_moneda' => 'nullable'
+        ]);
+        if($validator->fails()){
+            return $this->sendError('Error de validación.', $validator->errors());       
+        }
+
+
+        $localidad = Localidad::find($request->input('id_localidad'));
+        if (is_null($localidad)) {
+            return $this->sendError('Localidad no encontrada');
+        }
+
+
+        $evento = Evento::find($request->input('id_evento'));
+        if (is_null($evento)) {
+            return $this->sendError('El evento indicado no existe');
+        }
+
+        if(!is_null($request->input('codigo_moneda'))){
+            $moneda = Moneda::find($request->input('codigo_moneda'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda indicada no existe');
+            }  
+        }
+
+        $palcos = Palco::wherehas('localidad',function($query) use($request){
+                            $query->where('id', $request->input('id_localidad'));
+                        })
+                    ->with(['localidad' => function($query) use($request){
+                            $query->where('id', $request->input('id_localidad'));
+                        }])
+                ->get();
+
+        if(is_null($palcos) || sizeof($palcos) == 0){
+            return $this->sendError('No hay palcos registrados para la localidad');
+        }
+
+        (new LocalidadEventoController)->store($request);
+
+        foreach ($palcos as $palco) {
+            $this->store(
+                new Request([
+                    'id_evento'=> $request->input('id_evento'),
+                    'id_palco' => $palco->id,
+                    'precio_venta' => $request->input('precio_venta'),
+                    'precio_servicio' => $request->input('precio_servicio'),
+                    'impuesto' => $request->input('impuesto'),
+                    'status' => $request->input('status'),
+                    'codigo_moneda' => $request->input('codigo_moneda')
+                ])
+            );
+        }
+        return response()->json('Palco evento por localidad creadao con éxito', 200);        
+    }
+
+
+
+    /**
+     * Listado filas, puestos y palcos por localidad y evento
+     *
+     * [Se filtra por el ID del Localidad]
+     *
+     * @param  \App\Models\BoletaEvento  $boletaEvento
+     * @return \Illuminate\Http\Response
+     */
+    public function listado_palcos_localidad($id_localidad)
+    {
+
+        $localidad = Localidad::find($id_localidad);
+        if (is_null($localidad)) {
+            return $this->sendError('La localidad indicado no existe');
+        }
+
+        $palcos_localidad = Localidad::with(['palcos','palcos.puestos'])
+                                ->where('id', $id_localidad)
+                                ->get();
+
+        return $this->sendResponse($palcos_localidad->toArray(), 'Palcos de la localidad devueltos con éxito');
+
+    }
 }
+
