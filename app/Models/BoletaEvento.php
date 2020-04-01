@@ -15,11 +15,8 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property int $id
  * @property int $id_evento
  * @property int $id_puesto
- * @property float $precio_venta
- * @property float $precio_servicio
  * @property float $impuesto
  * @property int $status
- * @property string $codigo_moneda
  * @property string $token_qr
  * 
  * @property \App\Models\Evento $evento
@@ -40,21 +37,16 @@ class BoletaEvento extends Eloquent
 
 	protected $casts = [
 		'id_evento' => 'int',
-		'id_puesto' => 'int',
-		'precio_venta' => 'float',
-		'precio_servicio' => 'float',
+		'id_puesto' => 'int',		
 		'impuesto' => 'float',
 		'status' => 'int'
 	];
 
 	protected $fillable = [
 		'id_evento',
-		'id_puesto',
-		'precio_venta',
-		'precio_servicio',
+		'id_puesto',		
 		'impuesto',
-		'status',
-		'codigo_moneda'		
+		'status'				
 	];
 
 	protected $hidden = [
@@ -71,9 +63,9 @@ class BoletaEvento extends Eloquent
 		return $this->belongsTo(\App\Models\Puesto::class, 'id_puesto');
 	}
 
-	public function codigo_moneda()
+	public function precios_monedas()
 	{
-		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
+		return $this->hasMany(\App\Models\PreciosMonedas::class, 'id_boleta_evento');
 	}
 
 	public function boleta_reserva()

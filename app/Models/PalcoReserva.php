@@ -48,7 +48,6 @@ class PalcoReserva extends Eloquent
 	protected $casts = [
 		'id_palco_evento' => 'int',
 		'id_preventa' => 'int',
-		'abono' => 'float',
 		'precio_venta' => 'float',
 		'precio_servicio' => 'float',
 		'impuesto' => 'float',
@@ -58,7 +57,6 @@ class PalcoReserva extends Eloquent
 
 	protected $fillable = [
 		'id_preventa',
-		'abono',
 		'precio_venta',
 		'precio_servicio',
 		'impuesto',

@@ -33,9 +33,12 @@ class LocalidadEvento extends Eloquent
 	protected $casts = [
 		'id_localidad' => 'int',
 		'id_evento' => 'int',
+		'id_precios_monedas' => 'int',
 		'impuesto' => 'float',
 		'precio_venta' => 'float',
 		'precio_servicio' => 'float',
+		'precio_venta2' => 'float',
+		'precio_servicio2' => 'float'
 	];
 
 	protected $fillable = [
@@ -45,7 +48,10 @@ class LocalidadEvento extends Eloquent
 		'impuesto',
 		'precio_venta',
 		'precio_servicio',
-		'codigo_moneda'		
+		'codigo_moneda',
+		'precio_venta2',
+		'precio_servicio2',
+		'codigo_moneda2'						
 	];
 
 	public function localidad()
@@ -60,6 +66,13 @@ class LocalidadEvento extends Eloquent
 
 	public function codigo_moneda()
 	{
-		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda')->whereNotNull('codigo_moneda');
 	}
+
+	public function codigo_moneda2()
+	{
+		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda2')->whereNotNull('codigo_moneda');
+	}
+
+	
 }

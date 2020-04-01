@@ -42,6 +42,7 @@ class Preventum extends Eloquent
 	protected $fillable = [
 		'nombre',
 		'id_evento',
+		'id_evento_origen',
 		'id_tribuna',
 		'id_localidad',		
 		'fecha_inicio',
@@ -49,18 +50,18 @@ class Preventum extends Eloquent
 		'hora_inicio',
 		'hora_fin',
 		'activo',
-		'tipo_descuento_precio',
 		'porcentaje_descuento_precio',
-		'descuento_fijo_precio',
-		'tipo_descuento_servicio',
-		'porcentaje_descuento_servicio',
-		'descuento_fijo_servicio',
-		
+		'porcentaje_descuento_servicio'
 	];
 
 	public function evento()
 	{
 		return $this->belongsTo(\App\Models\Evento::class, 'id_evento');
+	}
+
+	public function evento_origen()
+	{
+		return $this->belongsTo(\App\Models\Evento::class, 'id_evento_origen');
 	}
 	
 	public function tribuna()
@@ -96,6 +97,11 @@ class Preventum extends Eloquent
 	public function palco_reservas()
 	{
 		return $this->hasMany(\App\Models\PalcoReserva::class, 'id_preventa');
+	}
+
+	public function precios_monedas()
+	{
+		return $this->hasMany(\App\Models\PreciosMonedas::class, 'id_preventa');
 	}
 }
 

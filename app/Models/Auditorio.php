@@ -52,9 +52,7 @@ class Auditorio extends Eloquent
 		'direccion',
 		'latitud',
 		'longitud',
-		'aforo',
-		'url_imagen',
-		'codigo_mapeado'
+		'aforo'		
 	];
 
 	public function eventos()

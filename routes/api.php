@@ -44,6 +44,10 @@ use Illuminate\Http\Request;
 	Route::get('buscarCondicion','CondicionController@buscarCondicion');
 	Route::get('condiciones_all','CondicionController@condiciones_all');
 
+	Route::apiResource('tipoidentificacion','TipoIdentificacionController');
+	Route::get('buscarTipoIdentificacion','TipoIdentificacionController@buscarTipoIdentificacion');
+	Route::get('tipo_identificacion_all','TipoIdentificacionController@tipo_identificacion_all');
+
 	Route::apiResource('tipocosto','TipoCostoController');
 	Route::get('buscarTipoCosto','TipoCostoController@buscarTipoCosto');
 	Route::get('tipo_costo_all','TipoCostoController@tipo_costo_all');
@@ -60,20 +64,42 @@ use Illuminate\Http\Request;
 	Route::get('preventum_all','PreVentumController@preventum_all');
 	Route::get('listado_preventasEvento/{listado_preventasEvento}','PreVentumController@listado_preventasEvento');
 	
+	Route::apiResource('precios_monedas','PreciosMonedasController');
+	Route::get('precios_evento/{id_evento}','PreciosMonedasController@precios_evento');
+	Route::get('precios_evento_moneda/{id_evento}/{codigo_moneda}','PreciosMonedasController@precios_evento_moneda');
+	Route::delete('destroy_evento/{id_evento}/{codigo_moneda}','PreciosMonedasController@destroy_evento');
+
 	Route::apiResource('moneda','MonedaController');
 	Route::get('buscarMoneda','MonedaController@buscarMoneda');
 	Route::get('moneda_all','MonedaController@moneda_all');
+
+	Route::apiResource('abonoreserva','AbonoReservaController');
+	Route::get('abonos_boleta/{id_boleto_reserva}','AbonoReservaController@abonos_boleta');
+	Route::get('abonos_palco/{id_palco_reserva}','AbonoReservaController@abonos_palco');
 	
+	Route::apiResource('palcosreservado','PalcoReservaController');
+	Route::get('palcosreservados_all','PalcoReservaController@palcosreservados_all');
+
+	Route::apiResource('boletasreservada','BoletaReservaController');
+	Route::get('boletasreservadas_all','BoletaReservaController@boletasreservadas_all');
+
 	Route::apiResource('boletasprevent','BoletasPreventController');
 	Route::apiResource('condicionesevento','CondicionesEventoController');
 	
 	Route::apiResource('costoevento','CostoEventoController');
+	Route::delete('costosevento','CostoEventoController@destroyxevento');
 	Route::get('costos_evento/{id_evento}','CostoEventoController@costos_evento');
+	
+	Route::apiResource('boletapreimpresa','BoletasPreimpresaController');
+	Route::get('boletapreimpresa_all','BoletasPreimpresaController@boletaspreimpresas_all');
+
+	Route::apiResource('palcopreimpreso','PalcoPreimpresoController');
+    Route::get('palcospreimpresos_all','PalcoPreimpresoController@palcospreimpresos_all');
 
 	Route::apiResource('boletaevento','BoletaEventoController');
 	Route::put('boletaevento_status/{id}','BoletaEventoController@update_status');
 	Route::get('listado_puestos_evento/{id}','BoletaEventoController@listado_puestos_evento');
-	Route::get('listado_boletas_localidad/{id_localidad}/{id_evento}','BoletaEventoController@listado_boletas_localidad');
+	Route::get('listado_boletas_localidad/{id_localidad}/{id_evento}/{codigo_moneda}','BoletaEventoController@listado_boletas_localidad');
 	Route::post('boletasxlocalidad','BoletaEventoController@storexlocalidad');	
 	//Route::post('boletas_palcos_reservadas/{id_localidad}/{id_evento}','BoletaEventoController@boletas_palcos_reservadas');
 	Route::post('boletas_palcos_reservadas','BoletaEventoController@boletas_palcos_reservadas');
@@ -84,7 +110,12 @@ use Illuminate\Http\Request;
 	Route::post('palcosxlocalidad','PalcoEventoController@storexlocalidad');
 	Route::get('listado_palcos_localidad/{id_localidad}','PalcoEventoController@listado_palcos_localidad');
 
+	Route::delete('deleteboletaspalcos/{id_evento}','LocalidadEventoController@deletexevento');
+
 	Route::apiResource('palcoprevent','PalcoPreventController');
+
+	Route::apiResource('devolucion','DevolucionController');
+	Route::get('devolucion_all','DevolucionController@devolucion_all');
 	
 	Route::apiResource('tasa','TasaController');
 	Route::post('convertir','TasaController@convertir');
@@ -175,8 +206,11 @@ use Illuminate\Http\Request;
 	Route::post('buscar_evento','EventoController@buscar_evento');
 	Route::get('eventos_usuario','EventoController@eventos_usuario');
 	Route::get('eventos_estado/{estado}','EventoController@eventos_estado');
+	Route::get('artist_evento_precios','EventoController@artist_evento_precios');
 
 	Route::apiResource('imagenevento','ImagenEventoController');
+	Route::apiResource('imagenevento','ImagenEventoController');
+	Route::delete('deleteimagenevento/{evento}/{imagen}', 'ImagenEventoController@destroy_evento_imagen');
 	Route::apiResource('imagenartist','ImagenArtistController');
 	Route::apiResource('puntoventaevento','PuntoventaEventoController');
 	Route::apiResource('eventocuponera','EventoCuponeraController');
@@ -237,6 +271,9 @@ use Illuminate\Http\Request;
 	Route::put('updateprofile/{updateprofile}', 'UsuarioController@updateprofile');	
 	Route::post('logout', 'UsuarioController@logout');
 	Route::delete('destroy/{usuario}', 'UsuarioController@destroy');
+
+	Route::apiResource('detalleventa','DetalleVentController');
+	Route::get('detalleventa_all','DetalleVentController@detalleventa_all');
 });
 
 

@@ -11,8 +11,6 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property int $id_evento
  * @property int $id_tipo_costo
  * @property string $descripcion
- * @property float $valor
- * @property string $codigo_moneda
  * 
  * @property \App\Models\TipoCupon $evento
  * @property \App\Models\Cuponera $tipo_costo
@@ -27,16 +25,13 @@ class CostoEvento extends Eloquent
 
 	protected $casts = [
 		'id_evento' => 'int',
-		'id_tipo_costo' => 'int',
-		'valor' => 'float'		
+		'id_tipo_costo' => 'int'		
 	];
 
 	protected $fillable = [
 		'id_evento',
 		'id_tipo_costo',
-		'descripcion',
-		'valor',
-		'codigo_moneda'
+		'descripcion'
 	];
 
 	public function evento()
@@ -49,8 +44,8 @@ class CostoEvento extends Eloquent
 		return $this->belongsTo(\App\Models\TipoCosto::class, 'id_tipo_costo');
 	}
 
-	public function codigo_moneda()
+	public function precios_monedas()
 	{
-		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
+		return $this->hasMany(\App\Models\PreciosMonedas::class, 'id_costo_evento');
 	}
 }

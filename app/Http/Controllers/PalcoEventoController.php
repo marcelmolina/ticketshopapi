@@ -8,6 +8,7 @@ use App\Http\Controllers\LocalidadEventoController;
 use App\Models\Evento;
 use App\Models\Palco;
 use App\Models\Moneda;
+use App\Models\PreciosMonedas;
 use App\Models\Localidad;
 use Illuminate\Http\Request;
 use Validator;
@@ -33,8 +34,8 @@ class PalcoEventoController extends BaseController
     public function index()
     {
         $palco_evento = PalcoEvento::with("evento")
-                    ->with("palco")
-                    ->with("moneda")
+                    ->with("palco")                    
+                    ->with("precios_monedas")
                     ->paginate(15);
 
         return $this->sendResponse($palco_evento->toArray(), 'Palcos de eventos devueltos con éxito');
@@ -49,17 +50,22 @@ class PalcoEventoController extends BaseController
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
      *@bodyParam impuesto float Impuesto de la boleta.
+      *@bodyParam precio_venta2 float Precio de venta 2 de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio 2.
      *@bodyParam status int Status de la boleta del evento.  
-     *@bodyParam codigo_moneda string required Codigo de la moneda.     
+     *@bodyParam codigo_moneda string required Codigo de la moneda. 
+     *@bodyParam codigo_moneda2 string required Codigo de la moneda.     
      *
      *@response{
      *       "id_evento" : 2,
      *       "id_palco" : 2,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
-     *       "impuesto" : 0,
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
      *       "status" : 0,
-     *       "codigo_moneda" : "USD"               
+     *       "codigo_moneda" : "USD",
+     *       "codigo_moneda" : "COP"  
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -73,8 +79,11 @@ class PalcoEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
+            'precio_venta2' => 'nullable|numeric',
+            'precio_servicio2' => 'nullable|numeric',
             'status' => 'nullable|integer',
-            'codigo_moneda' => 'required'
+            'codigo_moneda' => 'required|string',
+            'codigo_moneda2' => 'nullable|string'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -106,6 +115,22 @@ class PalcoEventoController extends BaseController
         $palco_ev->token_qr = $token;
         $palco_ev->save();
 
+        $preciosmonedas = new PreciosMonedas();
+        $preciosmonedas->palco_evento = $palco_evento->id;
+        $preciosmonedas->precio_venta = $request->input('precio_venta');
+        $preciosmonedas->precio_servicio = $request->input('precio_servicio');
+        $preciosmonedas->codigo_moneda = $request->input('codigo_moneda');
+        $preciosmonedas->save();
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->palco_evento = $palco_evento->id;
+            $preciosmonedas->precio_venta = $request->input('precio_venta2');
+            $preciosmonedas->precio_servicio = $request->input('precio_servicio2');
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save();
+        }
+
         return $this->sendResponse($palco_ev->toArray(), 'Palco de evento creado con éxito');
     }
 
@@ -121,7 +146,7 @@ class PalcoEventoController extends BaseController
     {
         $palco_evento = PalcoEvento::with("evento")
                     ->with("palco")
-                    ->with("moneda")
+                    ->with("precios_monedas")
                     ->where('id','=',$id)
                     ->get();
         if (count($palco_evento) == 0) {
@@ -138,16 +163,22 @@ class PalcoEventoController extends BaseController
      *
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
-     *@bodyParam impuesto float Impuesto de la boleta.
+     *@bodyParam impuesto float Impuesto del palco.
+     *@bodyParam precio_venta2 float Precio de venta 2 de la boleta del evento.
+     *@bodyParam precio_servicio2 float required Precio del servicio 2.
      *@bodyParam status int Status de la boleta del evento.  
      *@bodyParam codigo_moneda string required Codigo de la moneda.     
+     *@bodyParam codigo_moneda2 string Codigo de la moneda 2.     
      *
      *@response{
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
      *       "impuesto" : 0,
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
      *       "status" : 0,
-     *       "codigo_moneda" : "USD"               
+     *       "codigo_moneda" : "USD",
+     *       "codigo_moneda2" : "COP"                
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -161,8 +192,11 @@ class PalcoEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
+            'precio_venta2' => 'nullable|numeric',
+            'precio_servicio2' => 'nullable|numeric',
             'status' => 'nullable|integer',
-            'codigo_moneda' => 'required' 
+            'codigo_moneda' => 'required|string', 
+            'codigo_moneda2' => 'nullable|string' 
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -172,6 +206,13 @@ class PalcoEventoController extends BaseController
         $moneda = Moneda::find($input['codigo_moneda']);
         if (is_null($moneda)) {
             return $this->sendError('La moneda indicado no existe');
+        }
+
+        if(!is_null($input['codigo_moneda2'])){
+            $moneda = Moneda::find($input['codigo_moneda2']);
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicado no existe');
+            }
         }
 
         $palco_evento_search = PalcoEvento::find($id);
@@ -189,12 +230,50 @@ class PalcoEventoController extends BaseController
             $palco_evento_search->status  = 0;
         }else{
             $palco_evento_search->status  = $input['status'];
-        }
-        $palco_evento_search->codigo_moneda  = $input['codigo_moneda'];        
-        $palco_evento_search->precio_venta = $input['precio_venta'];
-        $palco_evento_search->precio_servicio = $input['precio_servicio'];
+        }      
 
         $palco_evento_search->save();
+
+
+        $pmonedas_search = PreciosMonedas::where('id_palco_evento', $id)->get();
+
+        if(count($pmonedas_search) > 1){
+            $i = "";
+            foreach ($pmonedas_search as $valuekey) {
+                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'precio_venta' => $input['precio_venta'.$i],
+                                'precio_servicio' => $input['precio_servicio'.$i],
+                                'codigo_moneda' => $input['codigo_moneda'.$i]
+                            ]);
+                $i = "2";
+
+            }            
+            
+        }else{
+
+            foreach ($pmonedas_search as $valuekey) {                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'precio_venta' => $input['precio_venta'],
+                                'precio_servicio' => $input['precio_servicio'],
+                                'codigo_moneda' => $input['codigo_moneda']
+                            ]); 
+            }
+
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->precio_venta = $input['precio_venta2'];
+            $preciosmonedas->precio_servicio = $input['precio_servicio2'];
+            $preciosmonedas->id_palco_evento = $id;
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save(); 
+
+
+
+        }
+
+
         return $this->sendResponse($palco_evento_search->toArray(), 'Palco del evento actualizado con éxito');
     }
     
@@ -265,7 +344,10 @@ class PalcoEventoController extends BaseController
      *@bodyParam impuesto float Impuesto de la boleta.
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
+     *@bodyParam precio_venta2 float Precio de venta (2) del palco.
+     *@bodyParam precio_servicio2 float Precio del servicio (2) del palco.
      *@bodyParam codigo_moneda string Codigo de la moneda.  
+     *@bodyParam codigo_moneda2 string Codigo de la moneda 2.  
      *
      *@response{
      *       "id_localidad" : 2,
@@ -273,7 +355,10 @@ class PalcoEventoController extends BaseController
      *       "impuesto" : 0,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
-     *       "codigo_moneda" : "USD"               
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
+     *       "codigo_moneda" : "USD",
+     *       "codigo_moneda2" : "COP"               
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -288,7 +373,10 @@ class PalcoEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
-            'codigo_moneda' => 'nullable'
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -310,6 +398,13 @@ class PalcoEventoController extends BaseController
             $moneda = Moneda::find($request->input('codigo_moneda'));
             if (is_null($moneda)) {
                 return $this->sendError('La moneda indicada no existe');
+            }  
+        }
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
             }  
         }
 
@@ -335,8 +430,11 @@ class PalcoEventoController extends BaseController
                     'precio_venta' => $request->input('precio_venta'),
                     'precio_servicio' => $request->input('precio_servicio'),
                     'impuesto' => $request->input('impuesto'),
+                    'precio_venta2' => $request->input('precio_venta2'),
+                    'precio_servicio2' => $request->input('precio_servicio2'),
                     'status' => $request->input('status'),
-                    'codigo_moneda' => $request->input('codigo_moneda')
+                    'codigo_moneda' => $request->input('codigo_moneda'),
+                    'codigo_moneda2' => $request->input('codigo_moneda2')
                 ])
             );
         }

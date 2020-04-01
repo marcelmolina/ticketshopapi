@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;  
 use App\Models\Usuario;
+use App\Models\TipoIdentificacion;
 use App\Models\Rol;
 use App\Notifications\SignupActivate;
 use Laravel\Passport\TokenRepository;
@@ -68,11 +69,11 @@ class UsuarioController extends BaseController
         $validator = Validator::make($input, [ 
             'nombre' => 'required|string',
             'identificacion' => 'string',
-            'tipo_identificacion' => 'integer',
-            'direccion' => 'string',
-            'ciudad' => 'string',
-            'departamento' => 'string',
-            'telefono' => 'string',
+            'tipo_identificacion' => 'nullable|integer',
+            'direccion' => 'nullable|string',
+            'ciudad' => 'nullable|string',
+            'departamento' => 'nullable|string',
+            'telefono' => 'nullable|string',
         ]);
 
         if($validator->fails()){
@@ -84,6 +85,13 @@ class UsuarioController extends BaseController
             return $this->sendError('Usuario no encontrado');
         }
 
+
+        if (!is_null($input['tipo_identificacion'])) {
+            $tipo_identificacion = TipoIdentificacion::find($input['tipo_identificacion']);
+            if(is_null($tipo_identificacion))
+                return $this->sendError('Tipo de Identificación no encontrada');
+        }
+
         $users->nombre = $input['nombre'];
         $users->identificacion = $input['identificacion'];
         $users->tipo_identificacion = $input['tipo_identificacion'];    
@@ -91,8 +99,7 @@ class UsuarioController extends BaseController
         $users->ciudad = $input['ciudad'];
         $users->departamento = $input['departamento'];
         $users->telefono = $input['telefono'];             
-        $users->save();
-        
+        $users->save();        
 
         return $this->sendResponse($users->toArray(), 'Usuario actualizado con éxito');
 
@@ -229,14 +236,14 @@ class UsuarioController extends BaseController
        $validator = Validator::make($request->all(), [ 
             'nombre' => 'required|string', 
             'email' => 'required|string|email', 
-            'password' => 'string|min:3',
-            'c_password' => 'string|min:3|same:password', 
-            'identificacion' => 'string',
-            'tipo_identificacion' => 'integer',
-            'direccion' => 'string',
-            'ciudad' => 'string',
-            'departamento' => 'string',
-            'telefono' => 'string',
+            'password' => 'required|string|min:3',
+            'c_password' => 'required|string|min:3|same:password', 
+            'identificacion' => 'nullable|string',
+            'tipo_identificacion' => 'nullable|integer',
+            'direccion' => 'nullable|string',
+            'ciudad' => 'nullable|string',
+            'departamento' => 'nullable|string',
+            'telefono' => 'nullable|string',
             'id_rol' => 'integer', 
         ]);
 
@@ -254,6 +261,12 @@ class UsuarioController extends BaseController
         $user_search = Usuario::find($request->input('email'));
         if (!is_null($user_search)) {            
             return response()->json(['error'=>'El Usuario ya se encuentra registrado'], 404);
+        }
+
+        if (!is_null($request->input('tipo_identificacion'))) {
+            $tipo_identificacion = TipoIdentificacion::find($request->input('tipo_identificacion'));
+            if(is_null($tipo_identificacion))
+                return $this->sendError('Tipo de Identificación no encontrada');
         }
 
 
@@ -399,7 +412,9 @@ class UsuarioController extends BaseController
     public function detailsuser() 
     { 
         $user = Auth::user();
-        return response()->json(['success' => $user], $this->successStatus); 
+        $email = $user["email"];
+        $info = Usuario::with('rol', 'tipo_identificacion')->find($email);
+        return response()->json(['success' => $info], $this->successStatus); 
     }
 
 

@@ -64,7 +64,7 @@ class VentController extends BaseController
             'direccion' => 'nullable|string',
             'telefono' => 'nullable|string',
             'email' => 'nullable|email',
-            'tipo_identidicacion' => 'nullable'
+            'tipo_identificacion' => 'nullable'
 
         ]);
         if($validator->fails()){

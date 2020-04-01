@@ -83,6 +83,11 @@ class Usuario extends Model implements AuthenticatableContract
 		return $this->belongsTo(\App\Models\Rol::class, 'id_rol');
 	}
 
+	public function tipo_identificacion()
+	{
+		return $this->belongsTo(\App\Models\TipoIdentificacion::class, 'tipo_identificacion');
+	}
+
 	public function boleta_reservas()
 	{
 		return $this->hasMany(\App\Models\BoletaReserva::class, 'email_usuario');

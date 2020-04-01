@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Evento;
+use App\Models\BoletaEvento;
 use App\Models\Auditorio;
 use App\Models\AuditorioMapeado;
 use App\Models\Cliente;
+use App\Models\PreciosMonedas;
 use App\Models\Temporada;
 use App\Models\TipoEvento;
+use App\Models\Moneda;
+use App\Models\Preventum;
+use App\Models\CostoEvento;
+use App\Models\LocalidadEvento;
 use Validator;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +43,8 @@ class EventoController extends BaseController
                     ->with('tipoevento')
                     ->with('cliente')                    
                     ->with('temporada')
-                    ->with('imagens')                    
+                    ->with('imagens')
+                    ->with("precios_monedas")                 
                     ->paginate(15);
         return $this->sendResponse($evento->toArray(), 'Eventos devueltos con éxito');
     }
@@ -54,7 +61,8 @@ class EventoController extends BaseController
                     ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
-                    ->with('temporada')                    
+                    ->with('temporada') 
+                    ->with("precios_monedas")                   
                     ->get();
         return $this->sendResponse($evento->toArray(), 'Eventos devueltos con éxito');
     }
@@ -80,7 +88,8 @@ class EventoController extends BaseController
                     ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
-                    ->with('temporada')
+                    ->with('temporada')                    
+                    ->with("precios_monedas")
                 ->where('evento.nombre','like', '%'.strtolower($input["nombre"]).'%')
                 ->get();
             return $this->sendResponse($evento->toArray(), 'Todos los Eventos filtrados');
@@ -90,11 +99,76 @@ class EventoController extends BaseController
                     ->with("auditorio_mapeado")
                     ->with('tipoevento')
                     ->with('cliente')
-                    ->with('temporada')
+                    ->with('temporada')                    
+                    ->with("precios_monedas")
                     ->get();
             return $this->sendResponse($evento->toArray(), 'Todos los Eventos devueltos'); 
        }
         
+    }
+
+
+    /**
+     * Lista de eventos por artistas y tipo.
+     * Precios minimos y maximos.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function artist_evento_precios()
+    {
+        $eventos = Evento::with('artists')
+                    ->with('tipoevento') 
+                    ->where('status', 1)                   
+                    ->get();
+
+        $monedas = Moneda::get();
+
+        $precio_maximo = 0;        
+        $moneda_maximo = "";
+        
+        foreach ($eventos as $evento) {
+           
+            $boletas = PreciosMonedas::whereHas('boleta_evento', function($query) use($evento)
+                        {
+                             $query->where('boleta_evento.id_evento', $evento['id']);                            
+                        })               
+                        ->orWhereHas('palco_evento', function($query) use($evento)
+                        {
+                             $query->where('palco_evento.id_evento', $evento['id']);                            
+                        })                        
+                        ->whereNotNull('id_boleta_evento')
+                        ->OrwhereNotNull('id_palco_evento')
+                        ->with('moneda')
+                        ->orderBy('precio_venta' ,'desc')
+                        ->get();
+            
+            $precios_array = array();
+            foreach ($monedas as $moneda) {
+                
+                
+                $boleta_filter = array_filter($boletas->toArray(), function($bol) use($moneda){
+                    return  $bol['codigo_moneda'] == $moneda->codigo_moneda;
+                });
+                                
+                if(count($boleta_filter) > 0){
+                   
+                   array_push($precios_array, array('precio_venta_max' => $boleta_filter[0]['precio_venta'], 'codigo_moneda_max' => $boleta_filter[0]['codigo_moneda']));
+
+                    if(count($boleta_filter) > 1){
+                        array_push($precios_array, array('precio_venta_min' => $boleta_filter[count($boleta_filter) - 1 ]['precio_venta'], 'codigo_moneda_min' => $boleta_filter[count($boleta_filter) - 1]['codigo_moneda']));
+                    }else{
+                        array_push($precios_array, array('precio_venta_min' => 0, 'codigo_moneda_min' => ''));
+                    }
+                }
+            }
+            
+            
+            
+            $evento['precios_max_min'] = $precios_array;            
+            
+        }
+
+        return $this->sendResponse($eventos->toArray(), 'Eventos devueltos con éxito');
     }
 
 
@@ -116,6 +190,7 @@ class EventoController extends BaseController
                     ->with('cliente')
                     ->with('imagens')
                     ->with('temporada')
+                    ->with('precios_monedas')
                 ->where('evento.email_usuario', $email)
                 ->get();
             return $this->sendResponse($evento->toArray(), 'Eventos por usuario');
@@ -143,6 +218,7 @@ class EventoController extends BaseController
                 ->with('cliente')
                 ->with('temporada')
                 ->with('imagens')
+                ->with("precios_monedas")
                 ->where('evento.status', $estado)
                 ->paginate(15);
         if(count($evento) > 0){
@@ -175,8 +251,11 @@ class EventoController extends BaseController
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
      *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
+     *@bodyParam monto_minimo2 double Monto mínimo (2) del evento.
      *@bodyParam hora_inicio_venta_internet time Hora inicio de la venta por internet 
      *@bodyParam hora_inicio_venta_puntos time Hora inicio de la venta de los puntos de venta 
+     *@bodyParam codigo_moneda string Codigo de la moneda.    
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).    
      *@response{
      *       "fecha_evento" : "2019-01-01",
      *       "fecha_finalizacion_evento" : "2019-01-02",
@@ -197,9 +276,12 @@ class EventoController extends BaseController
      *       "fecha_inicio_venta_internet": null,
      *       "fecha_inicio_venta_puntos": null,
      *       "monto_minimo": 10.10,
+     *       "monto_minimo2": 100,
      *       "cant_max_boletas":10,
      *       "hora_inicio_venta_internet":null,
-     *       "hora_inicio_venta_puntos":null
+     *       "hora_inicio_venta_puntos":null,
+     *       "codigo_moneda" : "USD"   
+     *       "codigo_moneda2" : "COP"   
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -222,7 +304,11 @@ class EventoController extends BaseController
             'hora_finalizacion' => 'nullable|date_format:H:i', 
             'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d',
             'hora_inicio_venta_internet' => 'nullable|date_format:H:i',
-            'cant_max_boletas' => 'nullable|integer',   
+            'cant_max_boletas' => 'nullable|integer', 
+            'monto_minimo' => 'nullable|numeric',  
+            'monto_minimo2' => 'nullable|numeric',  
+            'codigo_moneda' => 'nullable|string',
+            'codigo_moneda2' => 'nullable|string'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -275,9 +361,40 @@ class EventoController extends BaseController
             Input::merge(['venta_linea' => 1]);
         }
 
+        if(!is_null($request->input('codigo_moneda'))){
+            $moneda = Moneda::find($request->input('codigo_moneda'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda indicado no existe');
+            }
+        }else{
+            return $this->sendError('Debe indicar moneda');
+        }
+
+        if(!is_null($request->input('monto_minimo2')) && !is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
+        }
+
         $evento = Evento::create($request->all());   
         $evento->email_usuario = auth()->user()->email;
         $evento->save();
+
+        $preciosmonedas = new PreciosMonedas();
+        $preciosmonedas->id_evento = $evento->id;
+        $preciosmonedas->monto_minimo = $request->input('monto_minimo');
+        $preciosmonedas->codigo_moneda = $request->input('codigo_moneda');
+        $preciosmonedas->save();
+
+        if(!is_null($request->input('monto_minimo2')) && !is_null($request->input('codigo_moneda2'))){            
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->id_evento = $evento->id;
+            $preciosmonedas->monto_minimo = $request->input('monto_minimo2');
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save();
+        }
+
 
         return $this->sendResponse($evento->toArray(), 'Evento creado con éxito');
     }
@@ -292,11 +409,93 @@ class EventoController extends BaseController
      */
     public function show($id)
     {
-        $evento = Evento::with("auditorio")->with("auditorio_mapeado")->with("tipoevento")->with("cliente")->with("temporada")->find($id);
+        $evento = Evento::with("auditorio")
+            ->with("auditorio_mapeado")
+            ->with("tipoevento")
+            ->with("cliente")
+            ->with("temporada")
+            ->with("imagens")
+            ->with("precios_monedas.moneda", "preventa.precios_monedas.moneda")            
+            ->with("costos.precios_monedas.moneda")
+            ->with("localidades_evento.codigo_moneda")
+            ->with("localidades_evento.codigo_moneda2")
+            ->with("condiciones")            
+            ->with("artists")
+            ->with("auditorio_mapeado.tribunas.localidads.localidad_evento.codigo_moneda")
+            ->with("auditorio_mapeado.tribunas.localidads.localidad_evento.codigo_moneda2")
+            ->with("puntoventa_eventos.punto_ventum")
+            ->with("preventas")            
+            ->find($id);
+        
         if (is_null($evento)) {
             return $this->sendError('Evento no encontrado');
         }
-        return $this->sendResponse($evento->toArray(), 'Evento devuelto con éxito');
+        
+        $array_monedas = array();
+        // $monedas_evento = PreciosMonedas::with('moneda')->where('id_evento', $id)->select('codigo_moneda')->get();
+        // foreach ($monedas_evento->toArray() as $value) {
+        //     if(!in_array($value, $array_monedas))
+        //         array_push($array_monedas, $value);
+        // }
+        
+        // $preventa = Preventum::with("precios_monedas")
+        //                     ->with("precios_monedas.moneda")
+        //                     ->where('id_evento', $id)
+        //                     ->get();        
+        // foreach ($preventa->toArray()  as $value) {
+        //     foreach ($value["precios_monedas"] as $moneda) { 
+        //         $campo = array('codigo_moneda' => $moneda["codigo_moneda"], 'moneda' => $moneda["moneda"]);
+        //         if(!in_array($campo, $array_monedas))
+        //             array_push($array_monedas, $campo);
+        //     }
+        // }
+
+
+        // $costos = CostoEvento::with("precios_monedas")
+        //                     ->with("precios_monedas.moneda")
+        //                     ->where('id_evento', $id) 
+        //                     ->get();
+        // foreach ($costos->toArray()  as $value) {
+        //     foreach ($value["precios_monedas"] as $moneda) { 
+        //         $campo = array('codigo_moneda' => $moneda["codigo_moneda"], 'moneda' => $moneda["moneda"]);
+        //         if(!in_array($campo, $array_monedas))
+        //             array_push($array_monedas, $campo);
+        //     }
+        // }
+        
+        
+
+        $localidades = LocalidadEvento::with("localidad")
+                        ->with("codigo_moneda")
+                        ->with("codigo_moneda2")
+                        ->where('id_evento', $id)                        
+                        ->get();
+
+        
+        foreach ($localidades->toArray()  as $value) {
+            
+            if($value["codigo_moneda"] != null){
+                $campo = array('codigo_moneda' => $value["codigo_moneda"]['codigo_moneda'], 'moneda' => $value["codigo_moneda"]);
+                if(!in_array($campo, $array_monedas)){
+                    array_push($array_monedas, $campo);                    
+                }
+            }
+
+            if($value["codigo_moneda2"] != null){
+                $campo = array('codigo_moneda' => $value["codigo_moneda2"]['codigo_moneda'], 'moneda' => $value["codigo_moneda2"]);
+                if(!in_array($campo, $array_monedas)){
+                    array_push($array_monedas, $campo);
+                }
+
+            }
+            
+        }
+        
+       $event = $evento->toArray();       
+       
+       $event['monedas_evento'] = $array_monedas;
+
+        return $this->sendResponse($event, 'Evento devuelto con éxito');
     }
 
     /**
@@ -322,9 +521,11 @@ class EventoController extends BaseController
      *@bodyParam fecha_inicio_venta_internet date Fecha de inicio de la venta por internet. Example: 2019-01-01
      *@bodyParam fecha_inicio_venta_puntos date Fecha donde va a empezar la venta de la boletería desde los puntos de venta. Example: 2019-01-01
      *@bodyParam monto_minimo double Monto mínimo del evento.
-     *@bodyParam cant_max_boletas dinteger Cantidad máxima de venta de boletas
+     *@bodyParam monto_minimo2 double Monto mínimo (2) del evento.
      *@bodyParam hora_inicio_venta_internet time Hora inicio de la venta por internet 
-     *@bodyParam hora_inicio_venta_puntos time Hora inicio de la venta de los puntos de venta
+     *@bodyParam hora_inicio_venta_puntos time Hora inicio de la venta de los puntos de venta 
+     *@bodyParam codigo_moneda string Codigo de la moneda.    
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).  
      *@response{
      *       "fecha_evento" : "2019-01-03",
      *       "fecha_finalizacion_evento" : "2019-01-04",
@@ -345,9 +546,12 @@ class EventoController extends BaseController
      *       "fecha_inicio_venta_internet": "2019-01-01",
      *       "fecha_inicio_venta_puntos": "2019-01-04",
      *       "monto_minimo": 150.10,
+     *       "monto_minimo": 1900,
      *       "cant_max_boletas":10,
      *       "hora_inicio_venta_internet":null,
-     *       "hora_inicio_venta_puntos":null
+     *       "hora_inicio_venta_puntos":null,
+     *       "codigo_moneda" : "USD"
+     *       "codigo_moneda" : "COP"  
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -372,10 +576,26 @@ class EventoController extends BaseController
             'hora_finalizacion' => 'nullable|date_format:H:i', 
             'fecha_inicio_venta_internet' => 'nullable|date|date_format:Y-m-d',
             'hora_inicio_venta_internet' => 'nullable|date_format:H:i',
-            'cant_max_boletas' => 'nullable|integer',      
+            'cant_max_boletas' => 'nullable|integer',
+            'monto_minimo' => 'nullable|numeric',  
+            'monto_minimo2' => 'nullable|numeric',  
+            'codigo_moneda' => 'nullable|string',
+            'codigo_moneda2' => 'nullable|string'       
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
+        }
+
+        $moneda = Moneda::find($input['codigo_moneda']);
+        if (is_null($moneda)) {
+            return $this->sendError('La moneda indicado no existe');
+        } 
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
         }
 
         $evento_search = Evento::find($id);
@@ -452,10 +672,11 @@ class EventoController extends BaseController
         }
 
         if(is_null($input['monto_minimo'])){
-           $evento_search->monto_minimo = 0.00;
+           $evento_search->monto_minimo = 0.00;           
         }else{
-            $evento_search->monto_minimo = $input['monto_minimo'];
+            $evento_search->monto_minimo = $input['monto_minimo'];           
         }
+        
 
         if(is_null($input['domicilios'])){
              $evento_search->domicilios = 0;
@@ -468,7 +689,9 @@ class EventoController extends BaseController
         }else{
             $evento_search->venta_linea = $input['venta_linea'];
         }
-         $evento_search->descripcion = $input['descripcion'];
+       
+
+        $evento_search->descripcion = $input['descripcion'];
         $evento_search->fecha_evento = $input['fecha_evento'];
         $evento_search->nombre = $input['nombre'];
         $evento_search->id_auditorio = $input['id_auditorio'];
@@ -481,6 +704,40 @@ class EventoController extends BaseController
         }
 
         $evento_search->save();
+
+
+        $pmonedas_search = PreciosMonedas::where('id_evento', $id)->get();
+
+        if(count($pmonedas_search) > 1){
+            $i = "";
+            foreach ($pmonedas_search as $valuekey) {
+                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'monto_minimo' => $input['monto_minimo'.$i],
+                                'codigo_moneda' => $input['codigo_moneda'.$i]
+                            ]);
+                $i = "2";
+
+            }            
+            
+        }else{
+            foreach ($pmonedas_search as $valuekey) {                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'monto_minimo' => $input['monto_minimo'],
+                                'codigo_moneda' => $input['codigo_moneda']
+                            ]); 
+            }
+
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->monto_minimo = $input['monto_minimo2'];
+            $preciosmonedas->id_evento = $id;
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save(); 
+        }
+
+
         return $this->sendResponse($evento_search->toArray(), 'Evento actualizado con éxito');
 
     }
@@ -529,6 +786,7 @@ class EventoController extends BaseController
                     ->with('cliente')
                     ->with('temporada')
                     ->with('imagens')
+                    ->with("precios_monedas")
                 ->where('evento.id_tipo_evento', $id)
                 ->get();
         
@@ -651,6 +909,8 @@ class EventoController extends BaseController
                 }
             }
 
+            $eventos->with('codigo_moneda');
+
             
             $lista_eventos = $eventos->where('evento.status', 1)
                             ->get();
@@ -667,6 +927,7 @@ class EventoController extends BaseController
                         ->with('auditorio_mapeado')
                         ->with('palcos')
                         ->with('imagens')
+                        ->with('precios_monedas')
                         ->where('evento.status',1)                         
                         ->paginate(10);
             $lista_eventos = compact('eventos'); 
@@ -692,82 +953,20 @@ class EventoController extends BaseController
         $evento = Evento::find($id);
         if (is_null($evento)) {
             return $this->sendError('Evento no encontrado');
-        }
-        $id_auditorio = $evento->id_auditorio;
-
+        }        
         try {
 
-        $events = \DB::table('evento')
-                ->join('tipo_evento', 'evento.id_tipo_evento', '=', 'tipo_evento.id')                
-                ->join('temporada', 'evento.id_temporada', '=', 'temporada.id')
-                ->join('auditorio', 'evento.id_auditorio', '=', 'auditorio.id')                
-                ->join('clientes', 'evento.id_cliente', '=', 'clientes.id')
-                ->where('evento.id', $id)
-                ->select('evento.fecha_evento', 'evento.nombre', 'evento.descripcion','evento.hora_inicio','evento.hora_apertura', 'evento.hora_finalizacion', 'evento.codigo_pulep','evento.domicilios','evento.venta_linea','evento.status','evento.fecha_inicio_venta_internet','evento.fecha_inicio_venta_puntos','tipo_evento.nombre AS tipo_evento', 'evento.monto_minimo', 'evento.cant_max_boletas','temporada.nombre AS nombre_temporada','temporada.status AS status_temporada', 'auditorio.id AS id_auditorio','auditorio.nombre AS auditorio', 'auditorio.id_ciudad AS ciudad_auditorio', 'auditorio.id_departamento AS departamento_auditorio', 'auditorio.id_pais AS pais_auditorio', 'auditorio.direccion', 'auditorio.latitud', 'auditorio.longitud', 'auditorio.aforo', 'clientes.Identificacion AS identificacion_cliente', 'clientes.tipo_identificacion', 'clientes.nombrerazon', 'clientes.direccion AS direccion_cliente', 'clientes.id_ciudad AS ciudad_cliente', 'clientes.id_departamento AS departamento_cliente', 'clientes.email', 'clientes.telefono', 'clientes.tipo_cliente')
-                ->get();
-
-        $preventas = \DB::table('evento')                
-                ->join('preventa', 'preventa.id_evento', '=', 'evento.id')                
-                ->where('evento.id','=', $id)
-                ->select('preventa.nombre AS nombre_preventa','preventa.fecha_inicio AS fecha_inicio_preventa', 'preventa.fecha_fin AS fecha_fin_preventa', 'preventa.activo AS status_preventa')
-                ->get(); 
-        $events->first()->preventa_tickect = $preventas->toArray();
-
-        $events_img = \DB::table('imagen_evento')
-                      ->join('imagen', 'imagen_evento.id_imagen', '=', 'imagen.id')
-                      ->where('imagen_evento.id_evento','=', $id)
-                      ->select('imagen.nombre', 'imagen.url')
-                      ->get();
-
-        
-        $events->first()->imagenes_evento = $events_img->toArray();
-
-        $auditorio_img = \DB::table('imagenes_auditorio')
-                      ->join('imagen', 'imagenes_auditorio.id_imagen', '=', 'imagen.id')
-                      ->where('imagenes_auditorio.id_auditorio','=', $id_auditorio)
-                      ->select('imagen.nombre', 'imagen.url')
-                      ->get();
-
-        $events->first()->imagenes_auditorio = $auditorio_img->toArray();
-
-        $palcos_evento = \DB::table('palco_evento')                     
-                      ->where('palco_evento.id_evento','=', $id)
-                      ->select('palco_evento.id','palco_evento.id_palco')
-                      ->groupBy('palco_evento.id','palco_evento.id_palco')
-                      ->get();
-
-        $palcos_full = array();
-
-        for ($i=0; $i < count($palcos_evento); $i++) { 
+            $events = Evento::with('artists')
+                        ->with('tipoevento')
+                        ->with('auditorio_mapeado')
+                        ->with('preventa')
+                        ->with('imagens')
+                        ->with('boleta_eventos')
+                        ->with('palcos')
+                        ->with('precios_monedas')
+                        ->get();
             
-            $info_palco = \DB::table('palco')  
-                      ->join('localidad', 'palco.id_localidad', '=', 'localidad.id')                     
-                      ->where('palco.id','=', $palcos_evento[$i]->id_palco)
-                      ->select('palco.id AS palco_id', 'localidad.nombre AS localidad_palco')
-                      ->get();
-
-            
-            $info_puestos = \DB::table('puestos_palco_evento')                         
-                    ->join('palco_evento', 'puestos_palco_evento.id_palco_evento', '=', 'palco_evento.id')
-                    ->join('puesto', 'puestos_palco_evento.id_puesto', '=', 'puesto.id')
-                    ->join('localidad', 'localidad.id', '=', 'puesto.id_localidad')  
-                    ->join('fila', 'puesto.id_fila', '=', 'fila.id')                     
-                    ->where('palco_evento.id_evento','=', $id)
-                    ->where('puestos_palco_evento.id_palco_evento','=', $palcos_evento[$i]->id)
-                    ->where('puestos_palco_evento.id_palco','=', $palcos_evento[$i]->id_palco)
-                      ->select('puesto.id AS id_puesto','puesto.numero AS numero_puesto', 'localidad.nombre AS localidad_puesto','fila.nombre AS nombre_fila', 'fila.numero AS numero_fila', 'palco_evento.id_palco','palco_evento.precio_venta', 'palco_evento.precio_servicio','palco_evento.impuesto', 'palco_evento.status')
-                      
-                      ->get();
-            
-            $info_palco->first()->puestos = $info_puestos;
-
-            array_push($palcos_full, $info_palco);
-
-        }
-        $events->first()->palcos = $palcos_full;
-        
-        
-        return $this->sendResponse($events, 'Deatalle del evento devuelto con éxito');
+            return $this->sendResponse($events, 'Deatalle del evento devuelto con éxito');
             
         } catch (Exception $e) {
             return response()->json(['error' => 'Ocurrio un error', 'exception' => $e->errorInfo], 400);

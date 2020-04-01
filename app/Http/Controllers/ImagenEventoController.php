@@ -17,7 +17,7 @@ class ImagenEventoController extends BaseController
     
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);        
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy', 'destroy_evento_imagen']]);        
     }
 
 
@@ -178,5 +178,24 @@ class ImagenEventoController extends BaseController
         $search = ImagenEvento::where('id_imagen','=',$id_imagen)
                                 ->where('id_evento','=', $id_evento)->get();
         return $search;
+    }
+
+    /**
+     * Elimina elemento de la tabla imagen_evento
+     *
+     * [Se filtra por el ID del evento y el ID de la imagen]
+     *
+     * @param  int  $id_evento
+     * @param  int  $id_imagen
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy_evento_imagen($id_evento,$id_imagen)
+    {
+        $imagen_evento = ImagenEvento::where('id_evento','=',$id_evento)->where('id_imagen','=',$id_imagen)->first();
+        if (!$imagen_evento) {
+            return $this->sendError('Imagen por evento no encontrada');
+        }
+        $imagen_evento->delete();
+        return $this->sendResponse($imagen_evento->toArray(), 'Imagen por evento eliminada con éxito');
     }
 }

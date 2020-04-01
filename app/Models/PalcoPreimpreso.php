@@ -20,6 +20,7 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property \App\Models\PalcoEvento $palco_evento
  * @property \App\Models\PuntoventaEvento $puntoventa_evento
  * @property \App\Models\BoletasPrevent $boletas_prevent
+ * @property \App\Models\Preventum $preventa_palco
  *
  * @package App\Models
  */
@@ -56,5 +57,10 @@ class PalcoPreimpreso extends Eloquent
 	public function boletas_prevent()
 	{
 		return $this->belongsTo(\App\Models\BoletasPrevent::class, 'id_preventa', 'id_preventa');
+	}
+
+	public function preventa_palco()
+	{
+		return $this->belongsTo(\App\Models\Preventum::class, 'id_preventa');
 	}
 }

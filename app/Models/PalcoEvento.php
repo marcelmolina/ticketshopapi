@@ -43,8 +43,6 @@ class PalcoEvento extends Eloquent
 	protected $casts = [
 		'id_evento' => 'int',
 		'id_palco' => 'int',
-		'precio_venta' => 'float',
-		'precio_servicio' => 'float',
 		'impuesto' => 'float',
 		'status' => 'int'
 	];
@@ -52,11 +50,8 @@ class PalcoEvento extends Eloquent
 	protected $fillable = [
 		'id_evento',
 		'id_palco',
-		'precio_venta',
-		'precio_servicio',
 		'impuesto',
-		'status',
-		'codigo_moneda'
+		'status'		
 	];
 
 	protected $hidden = [
@@ -68,9 +63,9 @@ class PalcoEvento extends Eloquent
 		return $this->belongsTo(\App\Models\Evento::class, 'id_evento');
 	}
 
-	public function moneda()
+	public function precios_monedas()
 	{
-		return $this->belongsTo(\App\Models\Moneda::class, 'codigo_moneda');
+		return $this->hasMany(\App\Models\PreciosMonedas::class, 'id_palco_evento');
 	}
 
 	public function palco()

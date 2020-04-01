@@ -60,8 +60,7 @@ class Evento extends Eloquent
 		'id_auditorio_mapeado' => 'int',
 		'id_cliente' => 'int',
 		'id_temporada' => 'int',
-		'status' => 'int',
-		'monto_minimo' => 'double'
+		'status' => 'int'		
 	];
 
 	protected $dates = [
@@ -101,8 +100,8 @@ class Evento extends Eloquent
 		'hora_inicio_venta_internet',
 		'fecha_inicio_venta_puntos',
 		'hora_inicio_venta_puntos',
-		'monto_minimo',
 		'cant_max_boletas'
+		
 	];
 
 	public function auditorio()
@@ -133,6 +132,11 @@ class Evento extends Eloquent
 	public function temporada()
 	{
 		return $this->belongsTo(\App\Models\Temporada::class, 'id_temporada');
+	}
+
+	public function precios_monedas()
+	{
+		return $this->hasMany(\App\Models\PreciosMonedas::class, 'id_evento');
 	}
 
 	public function artists()
@@ -176,9 +180,34 @@ class Evento extends Eloquent
 		return $this->hasMany(\App\Models\Preventum::class, 'id_evento');
 	}
 
+	public function preventas()
+	{
+		return $this->hasMany(\App\Models\Preventum::class, 'id_evento_origen');
+	}
+
+	public function evento_origen_preventa()
+	{
+		return $this->hasMany(\App\Models\Preventum::class, 'id_evento_origen');
+	}
+
 	public function puntoventa_eventos()
 	{
 		return $this->hasMany(\App\Models\PuntoventaEvento::class, 'id_evento');
+	}
+
+	public function condiciones()
+	{
+		return $this->belongsToMany(\App\Models\Condicion::class, 'condiciones_evento', 'id_evento', 'id_condiciones');
+	}
+
+	public function costos()
+	{
+		return $this->hasMany(\App\Models\CostoEvento::class, 'id_evento');
+	}
+
+	public function localidades_evento()
+	{
+		return $this->hasMany(\App\Models\LocalidadEvento::class, 'id_evento');
 	}
 }
 

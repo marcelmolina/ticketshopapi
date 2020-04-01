@@ -128,7 +128,7 @@ class TipoDescuentoController extends BaseController
      * @param  \App\Models\TipoDescuento  $tipoDescuento
      * @return \Illuminate\Http\Response
      */
-    public function update($id,Request $request, TipoDescuento $tipoDescuento)
+    public function update($id,Request $request)
     {
         
         $input = $request->all();

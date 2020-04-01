@@ -42,12 +42,10 @@ class Localidad extends Eloquent
 		'nombre',
 		'id_tribuna',
 		'puerta_acceso',
-		'ruta',
-		'url_imagen',
 		'silleteria',
 		'aforo',
 		'palco',
-		'puestosxpalco',
+		'puestosxpalco'
 	];
 
 	public function tribuna()

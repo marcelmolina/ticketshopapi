@@ -31,7 +31,7 @@ class PreVentumController extends BaseController
      */
     public function index()
     {
-        $preventa = Preventum::with("evento")->paginate(15);
+        $preventa = Preventum::with("evento")->with("precios_monedas")->paginate(15);
         return $this->sendResponse($preventa->toArray(), 'Preventa devueltos con éxito');
     }
 
@@ -43,7 +43,7 @@ class PreVentumController extends BaseController
      */
     public function preventum_all()
     {
-        $preventa = Preventum::with("evento")->get();
+        $preventa = Preventum::with("evento")->with("precios_monedas")->get();
         return $this->sendResponse($preventa->toArray(), 'Preventa devueltos con éxito');
     }
 
@@ -81,6 +81,7 @@ class PreVentumController extends BaseController
      *
      *@bodyParam nombre string required Nombre de la preventa.
      *@bodyParam id_evento int Id del evento.
+     *@bodyParam id_evento_origen int Evento en que se creo la preventa.
      *@bodyParam id_tribuna int Id de la tribuna.
      *@bodyParam id_localidad int Id de la localidad.
      *@bodyParam fecha_inicio date Fecha de inicio.
@@ -88,15 +89,19 @@ class PreVentumController extends BaseController
      *@bodyParam hora_inicio time Hora de inicio.
      *@bodyParam hora_fin time Hora de finalización. 
      *@bodyParam porcentaje_descuento_precio float Porcentaje de descuento aplicado al precio de la preventa.
+     *@bodyParam porcentaje_descuento_precio2 float Porcentaje de descuento aplicado al precio de la preventa 2.
+     *@bodyParam porcentaje_descuento_servicio float Porcentaje de descuento aplicado al servicio de la preventa.
+     *@bodyParam porcentaje_descuento_servicio2 float Porcentaje de descuento aplicado al servicio de la preventa 2.
      *@bodyParam descuento_fijo_precio int Descuento fijo aplicado al precio de la preventa. 
      *@bodyParam tipo_descuento_precio int Tipo de descuento aplicado al precio de la preventa. 
-     *@bodyParam porcentaje_descuento_servicio float Porcentaje de descuento aplicado al servicio de la preventa.
      *@bodyParam descuento_fijo_servicio int Descuento fijo aplicado al servicio de la preventa. 
-     *@bodyParam tipo_descuento_servicio int Tipo de descuento aplicado al servicio de la preventa. 
+     *@bodyParam codigo_moneda string required Código de la moneda.
+     *@bodyParam codigo_moneda2 string Código de la moneda 2.
      *@bodyParam activo int required Estado de la preventa. Defaults 0
      * @response {
      *  "nombre": "PreVenta New",
      *  "id_evento": 1,
+     *  "id_evento_origen": 1,
      *  "id_tribuna": null,
      *  "id_localidad": null,
      *  "fecha_inicio": null,
@@ -104,12 +109,14 @@ class PreVentumController extends BaseController
      *  "hora_inicio": null,
      *  "hora_fin": null,
      *  "porcentaje_descuento_precio" : 10.00,
-     *  "descuento_fijo_precio" : 0,
-     *  "tipo_descuento_precio" : 0,
+     *  "descuento_fijo_precio" : 20.00,
+     *  "descuento_fijo_precio2" : 0,
      *  "porcentaje_descuento_servicio" : 10.00,
-     *  "descuento_fijo_servicio" : 0,
-     *  "tipo_descuento_servicio" : 0,
+     *  "descuento_fijo_servicio2" : 20.00,
+     *  "descuento_fijo_servicio" : 10,
      *  "activo": 0           
+     *  "codigo_moneda": "USD",
+     *  "codigo_moneda2": "COP"
      * }
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -120,6 +127,7 @@ class PreVentumController extends BaseController
         $validator = Validator::make($request->all(), [                        
             "nombre" => 'required|max:200', 
             "id_evento" =>  'nullable|integer',
+            "id_evento_origen" =>  'nullable|integer',
             "id_tribuna" =>  'nullable|integer',
             "id_localidad" =>  'nullable|integer', 
             "fecha_inicio" => 'nullable|date|date_format:Y-m-d',
@@ -127,12 +135,14 @@ class PreVentumController extends BaseController
             "hora_inicio" => 'nullable|date_format:H:i',
             "hora_fin" => 'nullable|date_format:H:i',
             "porcentaje_descuento_servicio" => 'nullable',
+            "descuento_fijo_servicio2" => 'nullable',
             "descuento_fijo_servicio" => 'nullable|integer', 
-            "tipo_descuento_servicio" => 'nullable|integer', 
             "porcentaje_descuento_precio" => 'nullable',
+            "descuento_fijo_precio2" => 'nullable',
             "descuento_fijo_precio" => 'nullable|integer', 
-            "tipo_descuento_precio" => 'nullable|integer', 
-            "activo" => 'required|integer'          
+            "activo" => 'required|integer',
+            "codigo_moneda" => 'required|string',
+            "codigo_moneda2" => 'nullable|string'          
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -175,8 +185,27 @@ class PreVentumController extends BaseController
         }
 
 
-        if($request->input('porcentaje_descuento') != null && $request->input('porcentaje_descuento') != ""){            
-            Input::merge(['descuento_fijo' => null]);            
+        if(!is_null($request->input('codigo_moneda'))){
+            $moneda = Moneda::find($request->input('codigo_moneda'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda indicada no existe');
+            }
+        }
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
+        }
+
+
+        if($request->input('porcentaje_descuento_precio') != null && $request->input('porcentaje_descuento_precio') != ""){            
+            Input::merge(['descuento_fijo_precio' => null]);            
+        }
+
+        if($request->input('porcentaje_descuento_servicio') != null && $request->input('porcentaje_descuento_servicio') != ""){            
+            Input::merge(['descuento_fijo_servicio' => null]);            
         }
 
         if($request->input('descuento_fijo_servicio') != null && $request->input('descuento_fijo_servicio') != ""){            
@@ -192,8 +221,35 @@ class PreVentumController extends BaseController
             Input::merge(['activo' => 0]);
         }
 
+        if(!is_null($request->input('id_evento_origen'))){
+            $evento_origen = Evento::find($request->input('id_evento_origen'));
+            if (is_null($evento_origen)) {
+                return $this->sendError('El evento origen indicado no existe');
+            }
+        }
 
-        $preventa = Preventum::create($request->all());        
+        $preventa = Preventum::create($request->all());  
+
+
+        $preciosmonedas = new PreciosMonedas();
+        $preciosmonedas->id_preventa = $preventa->id;
+        $preciosmonedas->descuento_fijo_precio = $request->input('descuento_fijo_precio');
+        $preciosmonedas->descuento_fijo_servicio = $request->input('descuento_fijo_servicio');
+        $preciosmonedas->codigo_moneda = $request->input('codigo_moneda');
+        $preciosmonedas->save();
+
+        if(!is_null($request->input('codigo_moneda2'))){ 
+
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->id_preventa = $preventa->id;
+            $preciosmonedas->descuento_fijo_precio = $request->input('descuento_fijo_precio2');
+            $preciosmonedas->descuento_fijo_servicio = $request->input('descuento_fijo_servicio2');
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save();
+
+        }
+
+
         return $this->sendResponse($preventa->toArray(), 'Preventa creada con éxito');
     }
 
@@ -214,7 +270,7 @@ class PreVentumController extends BaseController
             return $this->sendError('No se encuentra el evento especificado');
         }
 
-        $preventa = Preventum::where('id_evento','=',$id)->orderBy('fecha_inicio')->get();
+        $preventa = Preventum::where('id_evento_origen','=',$id)->orderBy('fecha_inicio')->get();
         if (count($preventa) == 0) {
             return $this->sendError('No se encuentran preventas por evento especificado');
         }
@@ -232,6 +288,7 @@ class PreVentumController extends BaseController
     public function show($id)
     {
         $preventa = Preventum::with("evento")
+                            ->with("precios_monedas")
                             ->where('id','=',$id)->get();
         if (count($preventa) == 0) {
             return $this->sendError('La preventa no se encuentra');
@@ -245,6 +302,7 @@ class PreVentumController extends BaseController
      *
      *@bodyParam nombre string required Nombre de la preventa.
      *@bodyParam id_evento int Id del evento.
+     *@bodyParam id_evento_origen int Evento en que se creo la preventa.
      *@bodyParam id_tribuna int Id de la tribuna.
      *@bodyParam id_localidad int Id de la localidad.
      *@bodyParam fecha_inicio date Fecha de inicio.
@@ -252,15 +310,18 @@ class PreVentumController extends BaseController
      *@bodyParam hora_inicio time Hora de inicio.
      *@bodyParam hora_fin time Hora de finalización. 
      *@bodyParam porcentaje_descuento_precio float Porcentaje de descuento aplicado al precio de la preventa.
+     *@bodyParam porcentaje_descuento_precio2 float Porcentaje de descuento 2 aplicado al precio de la preventa.
      *@bodyParam descuento_fijo_precio int Descuento fijo aplicado al precio de la preventa. 
-     *@bodyParam tipo_descuento_precio int Tipo de descuento aplicado al precio de la preventa. 
      *@bodyParam porcentaje_descuento_servicio float Porcentaje de descuento aplicado al servicio de la preventa.
+     *@bodyParam porcentaje_descuento_servicio2 float Porcentaje de descuento 2 aplicado al servicio de la preventa.
      *@bodyParam descuento_fijo_servicio int Descuento fijo aplicado al servicio de la preventa. 
-     *@bodyParam tipo_descuento_servicio int Tipo de descuento aplicado al servicio de la preventa. 
      *@bodyParam activo int required Estado de la preventa. Defaults 0
+     *@bodyParam codigo_moneda string required Código de la moneda.
+     *@bodyParam codigo_moneda2 string Código de la moneda 2.
      * @response {
      *  "nombre": "Pre-Venta Edit",
      *  "id_evento": null,
+     *  "id_evento_origen": 1,
      *  "id_tribuna": 1,
      *  "id_localidad": null,
      *  "fecha_inicio": null,
@@ -268,12 +329,14 @@ class PreVentumController extends BaseController
      *  "hora_inicio": null,
      *  "hora_fin": null,
      *  "porcentaje_descuento_precio" : 10.00,
+     *  "descuento_fijo_precio2" : 20.00,
      *  "descuento_fijo_precio" : 0,
-     *  "tipo_descuento_precio" : 0,
      *  "porcentaje_descuento_servicio" : 10.00,
+     *  "descuento_fijo_servicio2" : 20.00,
      *  "descuento_fijo_servicio" : 0,
-     *  "tipo_descuento_servicio" : 0,
-     *  "activo": 1           
+     *  "activo": 1,
+     *  "codigo_moneda": "USD",
+     *  "codigo_moneda2": "COP"         
      * }
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Preventum  $id
@@ -285,6 +348,7 @@ class PreVentumController extends BaseController
         $validator = Validator::make($request->all(), [                        
             "nombre" => 'required|max:200', 
             "id_evento" =>  'nullable|integer',
+            "id_evento_origen" =>  'nullable|integer',
             "id_tribuna" =>  'nullable|integer',
             "id_localidad" =>  'nullable|integer', 
             "fecha_inicio" => 'nullable|date|date_format:Y-m-d',
@@ -292,12 +356,14 @@ class PreVentumController extends BaseController
             "hora_inicio" => 'nullable|date_format:H:i',
             "hora_fin" => 'nullable|date_format:H:i',
             "porcentaje_descuento_servicio" => 'nullable',
+            "descuento_fijo_servicio2" => 'nullable',
             "descuento_fijo_servicio" => 'nullable|integer', 
-            "tipo_descuento_servicio" => 'nullable|integer', 
             "porcentaje_descuento_precio" => 'nullable',
+            "descuento_fijo_precio2" => 'nullable',
             "descuento_fijo_precio" => 'nullable|integer', 
-            "tipo_descuento_precio" => 'nullable|integer', 
-            "activo" => 'required|integer'          
+            "activo" => 'required|integer',
+            "codigo_moneda" => 'required|string',
+            "codigo_moneda2" => 'nullable|string'          
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -347,6 +413,22 @@ class PreVentumController extends BaseController
             $preventa_search->id_localidad = $input['id_localidad'];
 
         }
+
+
+        if(!is_null($input['codigo_moneda2'])){
+            $moneda = Moneda::find($input['codigo_moneda2']);
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
+        }
+
+
+        if(!is_null($input['codigo_moneda'])){
+            $moneda = Moneda::find($input['codigo_moneda']);
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda indicada no existe');
+            }
+        }
         
 
         if(is_null($input['activo'])){
@@ -356,29 +438,75 @@ class PreVentumController extends BaseController
         } 
 
         if(is_null($input['porcentaje_descuento_precio'])){
-            $preventa_search->porcentaje_descuento_precio  = null;
-            $preventa_search->descuento_fijo_precio  = $input['descuento_fijo_precio'];
+            $preventa_search->porcentaje_descuento_precio  = null;            
         }else{
             $preventa_search->porcentaje_descuento_precio  = $input['porcentaje_descuento_precio'];
-            $preventa_search->descuento_fijo_precio  = null;
         } 
 
         if(is_null($input['porcentaje_descuento_servicio'])){
-            $preventa_search->porcentaje_descuento_servicio  = null;
-            $preventa_search->descuento_fijo_servicio  = $input['descuento_fijo_servicio'];
+            $preventa_search->porcentaje_descuento_servicio  = null;            
         }else{
             $preventa_search->porcentaje_descuento_servicio  = $input['porcentaje_descuento_servicio'];
-            $preventa_search->descuento_fijo_servicio  = null;
+            
+        }
+
+        if(!is_null($input['id_evento_origen'])){
+            $evento_origen = Evento::find($input['id_evento_origen']);
+            if (is_null($evento_origen)) {
+                return $this->sendError('El evento origen indicado no existe');
+            }
+            $preventa_search->id_evento_origen = $input['id_evento_origen']; 
         } 
 
         $preventa_search->nombre = $input['nombre']; 
-        $preventa_search->tipo_descuento_precio = $input['tipo_descuento_precio'];
-        $preventa_search->tipo_descuento_servicio = $input['tipo_descuento_servicio'];        
         $preventa_search->fecha_inicio = $input['fecha_inicio'];
         $preventa_search->fecha_fin = $input['fecha_fin'];
         $preventa_search->hora_inicio = $input['hora_inicio'];
         $preventa_search->hora_fin = $input['hora_fin'];
         $preventa_search->save();
+
+
+        $pmonedas_search = PreciosMonedas::where('id_preventa', $id)->get();
+    
+        if(count($pmonedas_search) > 1){
+
+            $i = "";
+            foreach ($pmonedas_search as $valuekey) {
+                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'descuento_fijo_precio' => $input['descuento_fijo_precio'.$i],
+                                'descuento_fijo_servicio' => $input['descuento_fijo_servicio'.$i],
+                                'codigo_moneda' => $input['codigo_moneda'.$i]
+                            ]);
+                $i = "2";
+
+            } 
+                                    
+        }else{
+
+            foreach ($pmonedas_search as $valuekey) {                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'descuento_fijo_precio' => $input['descuento_fijo_precio'],
+                                'descuento_fijo_servicio' => $input['descuento_fijo_servicio'],
+                                'codigo_moneda' => $input['codigo_moneda']
+                            ]); 
+            }
+
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->descuento_fijo_precio = $input['descuento_fijo_precio2'];
+            $preciosmonedas->descuento_fijo_servicio = $input['descuento_fijo_servicio2'];
+            $preciosmonedas->id_preventa = $id;
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save(); 
+
+        }
+        
+
+        
+
+
         return $this->sendResponse($preventa_search->toArray(), 'Preventa actualizada con éxito');
     }
 

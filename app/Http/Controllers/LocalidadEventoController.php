@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoletaEvento;
+use App\Models\PalcoEvento;
+use App\Models\PuestosPalcoEvento;
 use App\Models\LocalidadEvento;
 use App\Models\Localidad;
 use App\Models\Evento;
@@ -22,7 +25,7 @@ class LocalidadEventoController extends BaseController
  
     public function __construct()
     {
-        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy']]);
+        $this->middleware('auth:api', ['only' => ['store', 'update', 'destroy', 'deletexevento']]);
     }
 
    
@@ -36,6 +39,7 @@ class LocalidadEventoController extends BaseController
         $localidad_evento = LocalidadEvento::with("evento")
                     ->with("localidad")
                     ->with("codigo_moneda")
+                    ->with("codigo_moneda2")
                     ->paginate(15);
 
         return $this->sendResponse($localidad_evento->toArray(), 'Localidades de los eventos devueltos con éxito');
@@ -61,8 +65,11 @@ class LocalidadEventoController extends BaseController
      *@bodyParam impuesto float Impuesto de la boleta.
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
-     *@bodyParam codigo_moneda string Codigo de la moneda.  
-     *@bodyParam imagen string Imagen en formato base64.   
+     *@bodyParam precio_venta2 float Precio de venta (2) de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio (2).
+     *@bodyParam codigo_moneda string Codigo de la moneda.
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).  
+     *@bodyParam imagen string Imagen en formato base64.     
      *
      *@response{
      *       "id_localidad" : 2,
@@ -70,8 +77,11 @@ class LocalidadEventoController extends BaseController
      *       "impuesto" : 0,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
      *       "imagen": null,
-     *       "codigo_moneda" : "USD"               
+     *       "codigo_moneda" : "USD",     
+     *       "codigo_moneda2" : "COP"     
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -85,17 +95,21 @@ class LocalidadEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
             'imagen' => 'nullable|string',
-            'codigo_moneda' => 'nullable'
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable',            
         ]);
         if($validator->fails()){
-            return $this->sendError('Error de validación.', $validator->errors());       
+            return $this->sendError('Error de validación.', $validator->errors());
         }
 
         $localidad = Localidad::find($request->input('id_localidad'));
         if (is_null($localidad)) {
             return $this->sendError('La localidad indicado no existe');
         }
+
 
         $evento = Evento::find($request->input('id_evento'));
         if (is_null($evento)) {
@@ -115,6 +129,16 @@ class LocalidadEventoController extends BaseController
             Input::merge(['codigo_moneda' => null]);
         }
 
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicado no existe');
+            }
+        }else{
+            Input::merge(['codigo_moneda2' => null]);
+        }
+
         if(is_null($request->input('impuesto'))){
             Input::merge(['impuesto' => 0]);
         }
@@ -130,17 +154,29 @@ class LocalidadEventoController extends BaseController
             file_put_contents($path, $img);
             $urlFile = env('APP_URL').'storage/imagenes/'. $img_name;
 
-        }      
+        }  
 
+        $localidad = LocalidadEvento::where('id_localidad','=',$request->input('id_localidad'))->where('id_evento','=',$request->input('id_evento'))->first();
 
-        $localidad = new LocalidadEvento();
+        if (!$localidad) {
+            $localidad = new LocalidadEvento();
+        }
+
+        if (!is_null($urlFile)) {
+            $localidad->url_imagen = $urlFile;
+        }
+
         $localidad->id_localidad = $request->input('id_localidad');
         $localidad->id_evento = $request->input('id_evento');
         $localidad->impuesto = $request->input('impuesto');
         $localidad->precio_venta = $request->input('precio_venta');
         $localidad->precio_servicio = $request->input('precio_servicio');
-        $localidad->codigo_moneda = $request->input('codigo_moneda');
-        $localidad->url_imagen = $urlFile;
+        $localidad->codigo_moneda = $request->input('codigo_moneda');    
+
+        
+        $localidad->precio_venta = $request->input('precio_venta2');
+        $localidad->precio_servicio = $request->input('precio_servicio2');
+        $localidad->codigo_moneda = $request->input('codigo_moneda2');     
 
         $localidad->save();
 
@@ -160,6 +196,7 @@ class LocalidadEventoController extends BaseController
         $localidad_evento = LocalidadEvento::with("evento")
                     ->with("localidad")
                     ->with("codigo_moneda")
+                    ->with("codigo_moneda2")
                     ->where('id_evento', $id)
                     ->get();   
 
@@ -179,16 +216,22 @@ class LocalidadEventoController extends BaseController
      *@bodyParam precio_venta float required Precio de eventa de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
      *@bodyParam impuesto float Impuesto de la boleta.
+     *@bodyParam precio_venta2 float Precio de venta (2) de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio (2).
      *@bodyParam url_imagen string Url de la imagen.
-     *@bodyParam codigo_moneda string Codigo de la moneda.     
+     *@bodyParam codigo_moneda string Codigo de la moneda.
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).
      *
      *@response{
      *       "id_localidad" : 2,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
      *       "impuesto" : null,
-     *       "url_imagen":null
-     *       "codigo_moneda" : "USD"               
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
+     *       "url_imagen":null,
+     *       "codigo_moneda" : "USD",
+     *       "codigo_moneda2" : "COP"
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -204,7 +247,11 @@ class LocalidadEventoController extends BaseController
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
             'imagen' => 'nullable|string',
-            'codigo_moneda' => 'nullable' 
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable', 
+            
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -229,6 +276,15 @@ class LocalidadEventoController extends BaseController
             Input::merge(['codigo_moneda' => null]);
         }
 
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
+        }else{
+            Input::merge(['codigo_moneda2' => null]);
+        }
+
         if(is_null($request->input('impuesto'))){
             Input::merge(['impuesto' => 0]);
         }
@@ -244,7 +300,7 @@ class LocalidadEventoController extends BaseController
             file_put_contents($path, $img);
             $urlFile = env('APP_URL').'storage/imagenes/'. $img_name;
 
-        }   
+        }
 
         LocalidadEvento::where('id_evento', $id)
                             ->where('id_localidad',  $input['id_localidad'])
@@ -253,6 +309,9 @@ class LocalidadEventoController extends BaseController
                                 'precio_servicio' => $input['precio_servicio'],
                                 'impuesto' => $input['impuesto'],
                                 'codigo_moneda' => $input['codigo_moneda'],
+                                'precio_venta2' => $input['precio_venta2'],
+                                'precio_servicio2' => $input['precio_servicio2'],
+                                'codigo_moneda2' => $input['codigo_moneda2'],
                                 'url_imagen' => $urlFile,
                             ]);  
         
@@ -294,6 +353,19 @@ class LocalidadEventoController extends BaseController
         $search = LocalidadEvento::where('id_localidad','=',$id_localidad)
                                 ->where('id_evento','=', $id_evento)->first();
         return $search;
-    }   
+    } 
+
+    public function deletexevento($id_evento){
+
+        BoletaEvento::where('id_evento','=',$id_evento)->delete();
+
+        $palcos = PalcoEvento::where('id_evento','=',$id_evento)->get();
+        foreach ($palcos as $palco) {
+            PuestosPalcoEvento::where('id_palco_evento','=',$palco->id)->delete();
+        }
+        
+        $palcos = PalcoEvento::where('id_evento','=',$id_evento)->delete();
+
+    }  
 
 }

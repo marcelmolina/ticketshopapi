@@ -114,9 +114,7 @@ class AuditorioController extends BaseController
      *@bodyParam direccion string Direccion del auditorio.
      *@bodyParam longitud int Coordenada: Longitud.
      *@bodyParam latitud int Coordenada: Latitud.
-     *@bodyParam aforo int Aforo.
-     *@bodyParam url_imagen string Url de la imagen.
-     *@bodyParam codigo_mapeado string Html de la imagen.
+     *@bodyParam aforo int Aforo.     
      *@response{
      *       "nombre" : "Auditorio 1",
      *       "id_ciudad" : 1,
@@ -125,9 +123,7 @@ class AuditorioController extends BaseController
      *       "direccion": "Street 1-56",
      *       "longitud": null,
      *       "latitud": null,
-     *       "aforo": null,
-     *       "url_imagen":null,
-     *       "codigo_mapeado":null
+     *       "aforo": null     
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -144,9 +140,7 @@ class AuditorioController extends BaseController
             'direccion' => 'required',
             'longitud' => 'nullable|numeric',
             'latitud' => 'nullable|numeric',
-            'aforo' => 'nullable|integer',
-            'url_imagen' => 'nullable|string',
-            'codigo_mapeado' => 'nullable|string'
+            'aforo' => 'nullable|integer',            
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -242,9 +236,7 @@ class AuditorioController extends BaseController
      *@bodyParam direccion string Direccion del auditorio.
      *@bodyParam longitud int Coordenada: Longitud.
      *@bodyParam latitud int Coordenada: Latitud.
-     *@bodyParam aforo int Aforo.
-     *@bodyParam url_imagen string Url de la imagen.
-     *@bodyParam codigo_mapeado string Html de la imagen.
+     *@bodyParam aforo int Aforo.     
      *@response{
      *       "nombre" : "Auditorio GOLD",
      *       "id_ciudad" : 1,
@@ -253,9 +245,7 @@ class AuditorioController extends BaseController
      *       "direccion": "Street 1-56",
      *       "longitud": 222,
      *       "latitud": 765,
-     *       "aforo": 1000,
-     *       "url_imagen":null,
-     *       "codigo_mapeado":null
+     *       "aforo": 1000     
      *     }
      *
      * @param  \Illuminate\Http\Request  $request
@@ -276,9 +266,7 @@ class AuditorioController extends BaseController
             'direccion' => 'required',
             'longitud' => 'nullable|numeric',
             'latitud' => 'nullable|numeric',
-            'aforo' => 'nullable|integer',
-            'url_imagen' => 'nullable|string',
-            'codigo_mapeado' => 'nullable|string'           
+            'aforo' => 'nullable|integer'                      
         ]);
 
 
@@ -319,15 +307,10 @@ class AuditorioController extends BaseController
             $auditorio->longitud = $input['longitud'];
         
         if (!is_null($request->input('aforo'))) 
-            $auditorio->aforo = $input['aforo'];
+            $auditorio->aforo = $input['aforo'];        
         
-        if (!is_null($request->input('codigo_mapeado'))) 
-            $auditorio->codigo_mapeado = $input['codigo_mapeado'];
-        
-        if (!is_null($request->input('url_imagen'))) 
-            $auditorio->url_imagen = $input['url_imagen'];
 
-         $auditorio->save();
+        $auditorio->save();
 
         return $this->sendResponse($auditorio->toArray(), 'Auditorio actualizado con éxito');
     }

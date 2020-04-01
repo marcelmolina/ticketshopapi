@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BoletaEvento;
 use App\Models\PalcoEvento;
 use App\Models\Preventum;
-use App\Http\Controllers\LocalidadEventoController;
 use App\Models\Evento;
 use App\Models\Moneda;
 use App\Models\Puesto;
@@ -13,10 +12,12 @@ use App\Models\Localidad;
 use App\Models\Tribuna;
 use App\Models\Fila;
 use App\Models\Palco;
+use App\Models\PreciosMonedas;
 use App\Models\PuestosPalcoEvento;
 use Illuminate\Http\Request;
 use App\Http\Services\BoletaService;
 use Illuminate\Support\Facades\Input;
+use App\Http\Controllers\LocalidadEventoController;
 use Validator;
 use Carbon\Carbon;
 
@@ -45,8 +46,8 @@ class BoletaEventoController extends BaseController
     public function index()
     {
         $boleta_evento = BoletaEvento::with("evento")
-                    ->with("puesto")
-                    ->with("codigo_moneda")
+                    ->with("puesto")                   
+                    ->with("precios_monedas")
                     ->paginate(15);
 
         return $this->sendResponse($boleta_evento->toArray(), 'Boletas de los eventos devueltos con éxito');
@@ -60,8 +61,11 @@ class BoletaEventoController extends BaseController
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
      *@bodyParam impuesto float Impuesto de la boleta.
+     *@bodyParam precio_venta2 float Precio de venta (2) de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio (2) de la boleta.
      *@bodyParam status int Status de la boleta del evento.  
      *@bodyParam codigo_moneda string Codigo de la moneda.     
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).     
      *
      *@response{
      *       "id_evento" : 2,
@@ -69,8 +73,11 @@ class BoletaEventoController extends BaseController
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
      *       "impuesto" : 0,
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
      *       "status" : 0,
-     *       "codigo_moneda" : "USD"               
+     *       "codigo_moneda" : "USD"
+     *       "codigo_moneda2" : "COP"               
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -84,8 +91,11 @@ class BoletaEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
             'status' => 'nullable|integer',
-            'codigo_moneda' => 'nullable'
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -109,10 +119,17 @@ class BoletaEventoController extends BaseController
         if(!is_null($request->input('codigo_moneda'))){
             $moneda = Moneda::find($request->input('codigo_moneda'));
             if (is_null($moneda)) {
-                return $this->sendError('La moneda indicado no existe');
+                return $this->sendError('La moneda indicada no existe');
             }
         }else{
             Input::merge(['codigo_moneda' => null]);
+        }
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            }
         }
 
         if(is_null($request->input('impuesto'))){
@@ -131,6 +148,22 @@ class BoletaEventoController extends BaseController
         $boleta->token_qr = $token;
         $boleta->save();
 
+        $preciosmonedas = new PreciosMonedas();
+        $preciosmonedas->id_boleta_evento = $boleta_evento->id;
+        $preciosmonedas->precio_venta = $request->input('precio_venta');
+        $preciosmonedas->precio_servicio = $request->input('precio_servicio');
+        $preciosmonedas->codigo_moneda = $request->input('codigo_moneda');
+        $preciosmonedas->save();
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->id_boleta_evento = $boleta_evento->id;
+            $preciosmonedas->precio_venta = $request->input('precio_venta2');
+            $preciosmonedas->precio_servicio = $request->input('precio_servicio2');
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save();
+        }
+
         return $this->sendResponse($boleta->toArray(), 'Boleta del evento creada con éxito');
     }
 
@@ -143,7 +176,10 @@ class BoletaEventoController extends BaseController
      *@bodyParam impuesto float Impuesto de la boleta.
      *@bodyParam precio_venta float required Precio de venta de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
-     *@bodyParam codigo_moneda string Codigo de la moneda.  
+     *@bodyParam precio_venta2 float Precio de venta (2) de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio (2) de la boleta.
+     *@bodyParam codigo_moneda string Codigo de la moneda. 
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).  
      *
      *@response{
      *       "id_localidad" : 2,
@@ -151,7 +187,10 @@ class BoletaEventoController extends BaseController
      *       "impuesto" : 0,
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
-     *       "codigo_moneda" : "USD"               
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
+     *       "codigo_moneda" : "USD",             
+     *       "codigo_moneda2" : "COP"               
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -166,7 +205,10 @@ class BoletaEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
-            'codigo_moneda' => 'nullable'
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable'
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
@@ -186,6 +228,13 @@ class BoletaEventoController extends BaseController
             $moneda = Moneda::find($request->input('codigo_moneda'));
             if (is_null($moneda)) {
                 return $this->sendError('La moneda indicada no existe');
+            }  
+        }
+
+        if(!is_null($request->input('codigo_moneda2'))){
+            $moneda = Moneda::find($request->input('codigo_moneda2'));
+            if (is_null($moneda)) {
+                return $this->sendError('La moneda 2 indicada no existe');
             }  
         }
 
@@ -210,8 +259,11 @@ class BoletaEventoController extends BaseController
                     'precio_venta' => $request->input('precio_venta'),
                     'precio_servicio' => $request->input('precio_servicio'),
                     'impuesto' => $request->input('impuesto'),
+                    'precio_venta2' => $request->input('precio_venta2'),
+                    'precio_servicio2' => $request->input('precio_servicio2'),
                     'status' => $request->input('status'),
-                    'codigo_moneda' => $request->input('codigo_moneda')
+                    'codigo_moneda' => $request->input('codigo_moneda'),
+                    'codigo_moneda2' => $request->input('codigo_moneda2')
                 ])
             );
         }
@@ -227,6 +279,8 @@ class BoletaEventoController extends BaseController
                     'precio_venta' => $request->input('precio_venta'),
                     'precio_servicio' => $request->input('precio_servicio'),
                     'impuesto' => $request->input('impuesto'),
+                    'precio_venta2' => $request->input('precio_venta2'),
+                    'precio_servicio2' => $request->input('precio_servicio2'),
                     'status' => $request->input('status'),
                     'codigo_moneda' => $request->input('codigo_moneda')
                 ]);
@@ -254,7 +308,7 @@ class BoletaEventoController extends BaseController
     {
         $boleta_evento = BoletaEvento::with("evento")
                     ->with("puesto")
-                    ->with("codigo_moneda")
+                    ->with("precios_monedas")
                     ->find($id);                    
         if (!$boleta_evento) {
             return $this->sendError('La boleta de evento no se encuentra');
@@ -271,15 +325,21 @@ class BoletaEventoController extends BaseController
      *@bodyParam precio_venta float required Precio de eventa de la boleta del evento.
      *@bodyParam precio_servicio float required Precio del servicio.
      *@bodyParam impuesto float Impuesto de la boleta.
+     *@bodyParam precio_venta2 float Precio de venta (2) de la boleta del evento.
+     *@bodyParam precio_servicio2 float Precio del servicio (2) de la boleta.
      *@bodyParam status int Status de la boleta del evento.  
-     *@bodyParam codigo_moneda string Codigo de la moneda.     
+     *@bodyParam codigo_moneda string Codigo de la moneda.
+     *@bodyParam codigo_moneda2 string Codigo de la moneda (2).     
      *
      *@response{
      *       "precio_venta" : 0,
      *       "precio_servicio" : 0,
      *       "impuesto" : null,
+     *       "precio_venta2" : 0,
+     *       "precio_servicio2" : 0,
      *       "status" : null,
      *       "codigo_moneda" : "USD"               
+     *       "codigo_moneda2" : "COP"               
      * }
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -293,23 +353,33 @@ class BoletaEventoController extends BaseController
             'precio_venta' => 'required',
             'precio_servicio' => 'required',
             'impuesto' => 'nullable',
+            'precio_venta2' => 'nullable',
+            'precio_servicio2' => 'nullable',
             'status' => 'nullable|integer',
-            'codigo_moneda' => 'nullable' 
+            'codigo_moneda' => 'nullable',
+            'codigo_moneda2' => 'nullable' 
         ]);
         if($validator->fails()){
             return $this->sendError('Error de validación.', $validator->errors());       
         }
 
-         $moneda = Moneda::find($input['codigo_moneda']);
+        $moneda = Moneda::find($input['codigo_moneda']);
         if (is_null($moneda)) {
             return $this->sendError('La moneda indicado no existe');
         } 
-        
+
+        if(!is_null($input['codigo_moneda2'])){
+            $moneda2 = Moneda::find($input['codigo_moneda2']);
+            if (is_null($moneda2)) {
+                return $this->sendError('La moneda 2 indicada no existe');
+            } 
+        }        
 
         $boleta_evento_search = BoletaEvento::find($id);
         if (is_null($boleta_evento_search)) {
             return $this->sendError('Boleta de evento no encontrado');
         }
+
 
         if(is_null($input['impuesto'])){
             $boleta_evento_search->impuesto  = 0;
@@ -323,16 +393,45 @@ class BoletaEventoController extends BaseController
             $boleta_evento_search->status  = $input['status'];
         }
 
-        if(is_null($input['codigo_moneda'])){
-            $boleta_evento_search->codigo_moneda  = null;
+        $boleta_evento_search->save();
+
+        $pmonedas_search = PreciosMonedas::where('id_boleta_evento', $id)->get();
+
+        if(count($pmonedas_search) > 1){
+            $i = "";
+            foreach ($pmonedas_search as $valuekey) {
+                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'precio_venta' => $input['precio_venta'.$i],
+                                'precio_servicio' => $input['precio_servicio'.$i],
+                                'codigo_moneda' => $input['codigo_moneda'.$i]
+                            ]);
+                $i = "2";
+
+            }            
+            
         }else{
-            $boleta_evento_search->codigo_moneda  = $input['codigo_moneda'];
+
+            foreach ($pmonedas_search as $valuekey) {                
+                PreciosMonedas::find($valuekey['id'])
+                    ->update([
+                                'precio_venta' => $input['precio_venta'],
+                                'precio_servicio' => $input['precio_servicio'],
+                                'codigo_moneda' => $input['codigo_moneda']
+                            ]); 
+            }
+
+            $preciosmonedas = new PreciosMonedas();
+            $preciosmonedas->precio_venta = $input['precio_venta2'];
+            $preciosmonedas->precio_servicio = $input['precio_servicio2'];
+            $preciosmonedas->id_boleta_evento = $id;
+            $preciosmonedas->codigo_moneda = $request->input('codigo_moneda2');
+            $preciosmonedas->save(); 
+
         }
 
-        $boleta_evento_search->precio_venta = $input['precio_venta'];
-        $boleta_evento_search->precio_servicio = $input['precio_servicio'];
-        $boleta_evento_search->save();
-        return $this->sendResponse($boleta_evento_search->toArray(), 'Boleta del evento actualizado con éxito');
+        return $this->sendResponse($boleta_evento_search->toArray(), 'Boleta del evento actualizada con éxito');
 
     }
 
@@ -450,7 +549,7 @@ class BoletaEventoController extends BaseController
      * @param  \App\Models\BoletaEvento  $boletaEvento
      * @return \Illuminate\Http\Response
      */
-    public function listado_boletas_localidad($id_localidad, $id_evento)
+    public function listado_boletas_localidad($id_localidad, $id_evento,$codigo_moneda)
     {
 
         $localidad = Localidad::find($id_localidad);
@@ -464,17 +563,32 @@ class BoletaEventoController extends BaseController
         }
 
         $boletas_localidad = Localidad::with(['filas','filas.puestos','filas.puestos.palcos',
-            'filas.puestos.palcos.palco_eventos' => function ($query) use($id_evento)
+            'filas.puestos.palcos.palco_eventos' => function ($query) use($id_evento,$codigo_moneda)
                                 {
-                                    $query->where('id_evento',$id_evento);
+                                    $query->where('id_evento',$id_evento); 
+                                    $query->with(array('precios_monedas' => function($query) use($codigo_moneda)
+                                    {
+                                        $query->where('codigo_moneda', $codigo_moneda);
+                                         
+                                    }));
                                 },
-            'filas.puestos.boleta_eventos' => function ($query) use($id_evento)
+            'filas.puestos.boleta_eventos' => function ($query) use($id_evento,$codigo_moneda)
                                 {
                                     $query->where('id_evento',$id_evento);
+                                    $query->with(array('precios_monedas' => function($query) use($codigo_moneda)
+                                    {
+                                        $query->where('codigo_moneda', $codigo_moneda);
+                                         
+                                    }));
                                 },
-            'palcos','palcos.palco_eventos' => function ($query) use($id_evento)
+            'palcos','palcos.palco_eventos' => function ($query) use($id_evento,$codigo_moneda)
                                 {
                                     $query->where('id_evento',$id_evento);
+                                    $query->with(array('precios_monedas' => function($query) use($codigo_moneda)
+                                    {
+                                        $query->where('codigo_moneda', $codigo_moneda);
+                                         
+                                    }));
                                 }])
             ->where('id', $id_localidad)
             ->get();
@@ -562,14 +676,18 @@ class BoletaEventoController extends BaseController
             return $this->sendError('Error de validación.', $validator->errors());       
         }
 
-        $localidad = Localidad::find($request->input('id_localidad'));
-        if (is_null($localidad)) {
-            return $this->sendError('La localidad indicado no existe');
+        if(!is_null($request->input('id_localidad'))){
+            $localidad = Localidad::find($request->input('id_localidad'));
+            if (is_null($localidad)) {
+                return $this->sendError('La localidad indicado no existe');
+            }
         }
 
-        $tribuna = Tribuna::find($request->input('id_tribuna'));
-        if (is_null($tribuna)){
-            return $this->sendError('La tribuna indicada no existe');
+        if(!is_null($request->input('id_tribuna'))){
+            $tribuna = Tribuna::find($request->input('id_tribuna'));
+            if (is_null($tribuna)){
+                return $this->sendError('La tribuna indicada no existe');
+            }
         }
 
         $evento = Evento::find($request->input('id_evento'));
@@ -577,37 +695,63 @@ class BoletaEventoController extends BaseController
             return $this->sendError('El evento indicado no existe');
         }
 
-        $preventa = PreVentum::where(function ($query) use ($request) {
+        $preventa = PreVentum::with('precios_monedas')->where(function ($query) use ($request) {
             $query->where('id_evento','=',$request->input('id_evento'))
-                  ->orWhere('id_tribuna','=',$request->input('id_tribuna'))
+		  ->orWhere('id_tribuna','=',$request->input('id_tribuna'))
                   ->orWhere('id_localidad','=',$request->input('id_localidad'));
         })
         ->whereDate('fecha_inicio','>=',Carbon::now())->whereDate('fecha_fin','<=',Carbon::now())->whereDate('hora_inicio','>=',Carbon::now())->whereDate('hora_fin','<=',Carbon::now())->orderby('fecha_inicio')->first();
 
-
+        
         $total = $request->precio_venta+$request->precio_servicio;
+        $totalAr = array();
+        
         if (!is_null($preventa)) {
             if ($preventa->id_localidad==$request->id_localidad || $preventa->id_tribuna==$request->id_tribuna || $preventa->id_evento==$request->id_evento) {
                 
-                if ($preventa->descuento_fijo_precio) {
-                    $total = $total-$preventa->descuento_fijo_precio;
-                } 
+                if(count($preventa->precios_monedas) > 0){
+                    foreach ($preventa->precios_monedas as $value) {
+                        if($value['descuento_fijo_precio']){
+                            $total = $total-$value['descuento_fijo_precio'];
 
-                else if ($preventa->porcentaje_descuento_precio) {
-
-                    if ($preventa->tipo_descuento_precio) {
-                        if ($preventa->tipo_descuento_precio == 1) {
-                            $total = $total-(($request->precio_venta*$preventa->porcentaje_descuento_precio)/100);
-                        } else if ($preventa->tipo_descuento_precio==2) {
-                            $total = $total-(($request->precio_servicio*$preventa->porcentaje_descuento_precio)/100);
+                            array_push($totalAr, array('total' => $total, 'moneda' => $value['codigo_moneda']));
                         }
-                    } else {
-                        $total = $total-(($total*$preventa->porcentaje_descuento_precio)/100);
                     }
+                }else{
+                    
+                    if($preventa->porcentaje_descuento_precio){
 
+                        $total = $total-(($request->precio_venta*$preventa->porcentaje_descuento_precio/100));
+                           
+                    }
+                       
+                    
+                }
+
+
+                if(count($preventa->precios_monedas) > 0){
+                    foreach ($preventa->precios_monedas as $value) {
+                        if($value['descuento_fijo_servicio']){
+                            $total = $total-$value['descuento_fijo_servicio'];
+
+                            array_push($totalAr, array('total' => $total, 'moneda' => $value['codigo_moneda']));
+                        }
+                    }
+                }else{
+                    
+                    if($preventa->porcentaje_descuento_servicio){
+
+                        $total = $total-(($request->precio_venta*$preventa->porcentaje_descuento_servicio/100));
+                           
+                    }
+                       
+                    
                 }
 
             }
+        }
+        if(sizeof($totalAr) > 0){
+            return $this->sendResponse($totalAr, '');
         }
 
         return $total+(($total*$request->impuesto)/100);
